@@ -1,17 +1,10 @@
-FROM ubuntu:latest
-RUN apt-get update && \
- apt-get install -y \
- build-essential \
- python3-pip \
- python3-dev
-
-# working directory
-WORKDIR /app
-
-# copy current directory into the container
-ADD . /app
-
-RUN pip3 install -r requirements.txt
-# make port 8000 available to the world outside
+FROM nethacker/ubuntu-18-04-python-3:python-3.7.3
+COPY requirements.txt /root/
+RUN pip install -r /root/requirements.txt && useradd -m ubuntu && mkdir /home/ubuntu/logs
+ENV HOME=/home/ubuntu
+USER ubuntu
+COPY app_server.py gunicorn_config.py /home/ubuntu/
+COPY tests/test_unit.py /home/ubuntu/
+WORKDIR /home/ubuntu/
 EXPOSE 8000
-CMD ["gunicorn", "--config", "./conf/gunicorn_conf.py", "src:app"]
+CMD ["gunicorn", "-c", "gunicorn_config.py", "app_server:app"]

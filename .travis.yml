@@ -10,17 +10,31 @@ before_install:
   # login to docker registries (dockerhub + heroku)
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - echo "$HEROKU_PASSWORD" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
-install: 
+install:
   - pip3 install -r requirements.txt
-script: 
-  - python3 -m pytest -v
-  #- flake8
-  - docker build -t app-server .
-  - docker tag app-server registry.heroku.com/$HEROKU_APP_NAME/web
+  # build dockerized environment to run tests
+  - docker-compose build
+  - docker-compose up -d
+script:
+  #unit tests
+  - docker exec -it app-server-flask bash -c "python -m unittest -v"
 deploy:
   - provider: script
     script:
-      docker push romicasal/app-server:production;
+      # build docker images, push to dockerhub & heroku
+      docker build -t romicasal/fiuba-taller-2-app-server:staging .;
+      docker tag romicasal/fiuba-taller-2-app-server:staging registry.heroku.com/$HEROKU_APP_NAME_STAGING/web;
+      docker push romicasal/fiuba-taller-2-app-server:staging;
+      docker push registry.heroku.com/$HEROKU_APP_NAME_STAGING/web;
+      heroku container:release web --app $HEROKU_APP_NAME_STAGING
+    on:
+      branch: develop
+  - provider: script
+    script:
+      # build docker images, push to dockerhub & heroku
+      docker build -t romicasal/fiuba-taller-2-app-server:production .;
+      docker tag romicasal/fiuba-taller-2-app-server:production registry.heroku.com/$HEROKU_APP_NAME/web;
+      docker push romicasal/fiuba-taller-2-app-server:production;
       docker push registry.heroku.com/$HEROKU_APP_NAME/web;
       heroku container:release web --app $HEROKU_APP_NAME
     on:
