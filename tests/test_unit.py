@@ -8,7 +8,7 @@ class AuthServerTestCase(unittest.TestCase):
     
     @classmethod
     def setUpClass(self):
-        "set up test fixtures"
+        """ Set up test fixtures"""
         print('### Setting up auth server ###')
         app = app_server.app
         app.config['TESTING'] = True
@@ -16,7 +16,7 @@ class AuthServerTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        "tear down test fixtures"
+        """ Tear down test fixtures"""
         print('### Tearing down the auth server ###')
 
     def test_01_get_ping(self):
@@ -24,6 +24,7 @@ class AuthServerTestCase(unittest.TestCase):
 
         r = self.app.get('/api/v1/ping')
         self.assertEqual(r.status_code, 200)
-    
+
+
 if __name__ == '__main__':
     unittest.main()
