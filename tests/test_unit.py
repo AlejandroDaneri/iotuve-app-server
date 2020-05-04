@@ -2,7 +2,7 @@ import io
 import os
 import json
 import unittest
-import auth_server
+import app_server
 
 class AuthServerTestCase(unittest.TestCase):
     
@@ -10,7 +10,7 @@ class AuthServerTestCase(unittest.TestCase):
     def setUpClass(self):
         "set up test fixtures"
         print('### Setting up auth server ###')
-        app = auth_server.app
+        app = app_server.app
         app.config['TESTING'] = True
         self.app = app.test_client()
 
