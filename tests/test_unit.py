@@ -20,7 +20,7 @@ class AuthServerTestCase(unittest.TestCase):
         print('### Tearing down the app server ###')
 
     def test_01_get_ping(self):
-        """ Test that the auth server is running and reachable"""
+        """ Test that the app server is running and reachable"""
 
         r = self.app.get('/api/v1/ping')
         self.assertEqual(r.status_code, 200)
