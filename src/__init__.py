@@ -1,28 +1,45 @@
 import os
-import logging
-from flask import Flask, g
+import time
+from flask import Flask, g, request
 from flask_restful import Api
 from flask_pymongo import PyMongo
+from src.conf import APP_PREFIX, MONGO_URI
 
-api_version = "1"
-api_name = "fiuba-taller-2-app-server-v" + api_version
-api_path = "/api/v" + api_version
+mongo = PyMongo()
+
 
 def create_app():
     app = Flask(__name__)
 
-    api = Api(app)
+    app.config["MONGO_URI"] = MONGO_URI
 
-    app.config["MONGO_URI"] = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' + os.environ[
-        'MONGODB_PASSWORD'] + '@' + \
-                              os.environ['MONGODB_HOSTNAME'] + ':' + os.environ['MONGODB_PORT'] + '/' + os.environ[
-                                  'MONGODB_DATABASE'] + '?retryWrites=false'
-    mongo = PyMongo(app)
-    app.db = mongo.db
-    app.cl = mongo.cx
+    api = Api(app, prefix=APP_PREFIX)
+    mongo.init_app(app)
 
-    from .resources.routes import initialize_routes
+    from src.misc.requests import request_id
+    from src.conf.routes import init_routes
 
-    initialize_routes(api, api_path)
+    init_routes(api)
+
+    @app.before_request
+    def before_request():
+        g.start = time.time()
+        g.session_token = None  # value initialized on check_token
+        request_id()
+
+    @app.after_request
+    def after_request(response):
+        diff = time.time() - g.start
+        mongo.db.server_stats.insert_one({
+            "status": response.status_code,
+            "time": diff,
+            "full_path": request.full_path,
+            "request_id": g.request_id,
+            "timestamp": g.start
+        })
+        response.headers.add('X-Request-ID', g.request_id)
+        return response
+
+    mongo.db.server_stats.delete_many({})
 
     return app
