@@ -7,6 +7,7 @@ from src.misc.authorization import check_token
 from src.misc.responses import response_error
 from src.clients.auth_api import AuthAPIClient
 from src.schemas.user import UserSchema
+from src.schemas.patch import PatchSchema
 
 
 class Users(Resource):
@@ -31,12 +32,12 @@ class Users(Resource):
     @check_token
     def patch(self, username):
         app.logger.debug("PRUEBA PATCH USER")
-        schema = UserSchema(only=('password',))
+        schema_patch = PatchSchema()  # many=True
         try:
-            user = schema.load(request.get_json(force=True))
+            patch_data = schema_patch.load(request.get_json(force=True))
         except ValidationError as e:
             return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()))
-        response = AuthAPIClient.patch_user(username, schema.dump(user))
+        response = AuthAPIClient.patch_user(username, schema_patch.dump(patch_data))
         return response.json(), response.status_code
 
     @check_token

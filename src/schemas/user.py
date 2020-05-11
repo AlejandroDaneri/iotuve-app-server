@@ -1,5 +1,4 @@
-from marshmallow import Schema, fields, post_load, validate, EXCLUDE
-# from src.dtos.user import User, Contact, Avatar
+from marshmallow import Schema, fields, validate, EXCLUDE
 
 
 class ContactSchema(Schema):
@@ -10,10 +9,6 @@ class ContactSchema(Schema):
     email = fields.Email(required=True, validate=validate.Email())
     phone = fields.Str(required=True, validate=validate.Length(min=8))
 
-    #@post_load
-    #def make_contact(self, data, **kwargs):
-    #    return Contact(**data)
-
 
 class AvatarSchema(Schema):
 
@@ -21,10 +16,6 @@ class AvatarSchema(Schema):
         unknown = EXCLUDE
 
     url = fields.Url(required=True)
-
-    #@post_load
-    #def make_avatar(self, data, **kwargs):
-    #    return Avatar(**data)
 
 
 class UserSchema(Schema):
@@ -38,8 +29,3 @@ class UserSchema(Schema):
     last_name = fields.Str(required=True, validate=validate.Length(min=1))
     contact = fields.Nested(ContactSchema)
     avatar = fields.Nested(AvatarSchema)
-
-    #@post_load
-    #def make_user(self, data, **kwargs):
-    #    return User(**data)
-
