@@ -1,9 +1,8 @@
-import os
 import time
 from flask import Flask, g, request
 from flask_restful import Api
 from flask_pymongo import PyMongo
-from src.conf import APP_PREFIX, MONGO_URI
+from src.conf import MONGO_URI, APP_VERSION
 
 mongo = PyMongo()
 
@@ -13,7 +12,7 @@ def create_app():
 
     app.config["MONGO_URI"] = MONGO_URI
 
-    api = Api(app, prefix=APP_PREFIX)
+    api = Api(app)
     mongo.init_app(app)
 
     from src.misc.requests import request_id
@@ -31,6 +30,7 @@ def create_app():
     def after_request(response):
         diff = time.time() - g.start
         mongo.db.server_stats.insert_one({
+            "version": APP_VERSION,
             "status": response.status_code,
             "time": diff,
             "full_path": request.full_path,
