@@ -28,4 +28,4 @@ class UserSchema(Schema):
     first_name = fields.Str(required=True, validate=validate.Length(min=1))
     last_name = fields.Str(required=True, validate=validate.Length(min=1))
     contact = fields.Nested(ContactSchema)
-    avatar = fields.Nested(AvatarSchema)
+    avatar = fields.Nested(AvatarSchema, allow_none=True, default=None)
