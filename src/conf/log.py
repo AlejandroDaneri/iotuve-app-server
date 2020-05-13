@@ -1,5 +1,6 @@
 LOG_CONFIG = {
     'version': 1,
+    'disable_existing_loggers': False,
     'filters': {
         'request_id': {
             '()': 'src.misc.requests.RequestIdFilter',
@@ -7,8 +8,8 @@ LOG_CONFIG = {
     },
     'formatters': {
         'standard': {
-            'format': '%(asctime)s - %(levelname)s [request_id:%(request_id)s] [func:%(name)s.%(module)s.%(funcName)s] [lineno:%(lineno)d] [message:%(message)s]',
-        },
+            'format': '[%(asctime)s] [-] [%(levelname)s] [request_id:%(request_id)s] [func:%(name)s.%(module)s.%(funcName)s] [lineno:%(lineno)d] [message:%(message)s]',
+        }
     },
     'handlers': {
         'console': {
@@ -28,6 +29,14 @@ LOG_CONFIG = {
             'level':'DEBUG',
         },
         'urllib3': {
+            'handlers': ['console'],
+            'level':'DEBUG',
+        },
+        'gunicorn.error': {
+            'handlers': ['console'],
+            'level':'DEBUG',
+        },
+        'flask_cors': {
             'handlers': ['console'],
             'level':'DEBUG',
         },

@@ -7,8 +7,8 @@ app = create_app()
 
 # Inicializacion de logs - para cuando ejecuta gunicorn + flask
 if __name__ != '__main__':
-    gunicorn_logger = logging.getLogger('gunicorn.error')
     logging.config.dictConfig(LOG_CONFIG)
+    gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
 else:

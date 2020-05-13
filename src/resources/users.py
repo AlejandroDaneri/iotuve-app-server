@@ -14,13 +14,11 @@ class Users(Resource):
 
     @check_token
     def get(self, username):
-        app.logger.debug("PRUEBA GET USER")
         response = AuthAPIClient.get_user(username)
         return response.json(), response.status_code
 
     @check_token
     def put(self, username):
-        app.logger.debug("PRUEBA PUT USER")
         schema = UserSchema(exclude=('password',))
         try:
             user = schema.load(request.get_json(force=True))
@@ -31,7 +29,6 @@ class Users(Resource):
 
     @check_token
     def patch(self, username):
-        app.logger.debug("PRUEBA PATCH USER")
         schema_patch = PatchSchema()  # many=True
         try:
             patch_data = schema_patch.load(request.get_json(force=True))

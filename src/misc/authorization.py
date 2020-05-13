@@ -18,6 +18,6 @@ def check_token(f):
         if response.status_code != requests.codes.ok:
             return response_error(HTTPStatus.UNAUTHORIZED, 'Authentication error. %s' % response.text)
         g.session_token = session_token
-        g.session_data = response.json()
+        g.session_username = response.json()['username']
         return f(*args, **kwargs)
     return wrapper

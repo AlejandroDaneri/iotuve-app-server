@@ -15,4 +15,14 @@ APP_PREFIX = "/api/" + APP_VERSION
 
 LOG_LEVEL = str(os.environ.get("GUNICORN_LOG_LEVEL", "debug"))
 
-MONGO_URI = 'mongodb://' + os.environ['MONGODB_USERNAME'] + ':' + os.environ['MONGODB_PASSWORD'] + '@' + os.environ['MONGODB_HOSTNAME'] + ':' + os.environ['MONGODB_PORT'] + '/' + os.environ['MONGODB_DATABASE'] + '?retryWrites=false'
+MONGO_DB = os.environ.get('MONGODB_DATABASE', 'app-server-db')
+MONGO_HOST = os.environ.get('MONGODB_HOSTNAME', 'app-server-mongodb')
+MONGO_PORT = os.environ.get('MONGODB_PORT', '27017')
+MONGO_USERNAME = os.environ.get('MONGODB_USERNAME', 'appserveruser')
+MONGO_PASSWORD = os.environ.get('MONGODB_PASSWORD', 123456)
+
+MONGO_URI = 'mongodb://' + MONGO_USERNAME + ':' + MONGO_PASSWORD + '@' + MONGO_HOST + ':' + MONGO_PORT + '/' + MONGO_DB + '?retryWrites=false'
+
+MONGODB_SETTINGS = {
+    'host': MONGO_URI
+}
