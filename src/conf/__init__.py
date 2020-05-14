@@ -19,7 +19,7 @@ MONGO_DB = os.environ.get('MONGODB_DATABASE', 'app-server-db')
 MONGO_HOST = os.environ.get('MONGODB_HOSTNAME', 'app-server-mongodb')
 MONGO_PORT = os.environ.get('MONGODB_PORT', '27017')
 MONGO_USERNAME = os.environ.get('MONGODB_USERNAME', 'appserveruser')
-MONGO_PASSWORD = os.environ.get('MONGODB_PASSWORD', 123456)
+MONGO_PASSWORD = os.environ.get('MONGODB_PASSWORD', '123456')
 
 MONGO_URI = 'mongodb://' + MONGO_USERNAME + ':' + MONGO_PASSWORD + '@' + MONGO_HOST + ':' + MONGO_PORT + '/' + MONGO_DB + '?retryWrites=false'
 
