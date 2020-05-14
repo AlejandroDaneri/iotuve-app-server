@@ -19,7 +19,7 @@ script:
   #unit tests
   - docker exec -it app-server-flask bash -c "python -m unittest tests/* -v"
   #coverage
-  - docker exec -it app-server-flask bash -c "coverage run -m unittest tests/* -v"
+  - coverage run -m unittest tests/* -v
 after_success:
   - COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN coveralls
 deploy:
