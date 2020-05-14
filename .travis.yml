@@ -21,7 +21,7 @@ script:
   #coverage
   - docker exec -it app-server-flask bash -c "coverage run -m unittest tests/* -v"
 after_success:
-  - codecov # submit coverage
+  - COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN coveralls
 deploy:
   - provider: script
     script:
