@@ -16,7 +16,7 @@ def check_token(f):
             return response_error(HTTPStatus.UNAUTHORIZED, 'Token required')
         response = AuthAPIClient.get_session(session_token)
         if response.status_code != requests.codes.ok:
-            return response_error(HTTPStatus.UNAUTHORIZED, 'Authentication error. %s' % response.text)
+            return response.json(), response.status_code
         g.session_token = session_token
         g.session_username = response.json()['username']
         return f(*args, **kwargs)

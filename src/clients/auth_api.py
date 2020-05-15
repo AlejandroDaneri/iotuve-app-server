@@ -1,6 +1,5 @@
 import requests
 from flask import g
-from flask import current_app as app
 import src.conf as conf
 
 
@@ -72,6 +71,5 @@ class AuthAPIClient:
 
     @staticmethod
     def post_user(data):
-        app.logger.debug("Inside post_user data: %s" % data)
         return requests.post("%s%s" % (conf.API_AUTH_CLIENT_URL, "users"),
                              json=data, headers=AuthAPIClient.__headers())

@@ -1,6 +1,6 @@
 from http import HTTPStatus
 from flask import current_app as app
-from flask import make_response, jsonify
+from flask import make_response
 from flask_restful import Resource
 from src.conf import APP_NAME
 from src.models.stat import Stat
