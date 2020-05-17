@@ -1,6 +1,6 @@
 from src.resources.status import Home, Ping, Stats, Status
 from src.resources.sessions import Sessions
-from src.resources.users import Users, UsersList, Recovery
+from src.resources.users import Users, UsersList, Recovery, RecoveryList
 from src.conf import APP_PREFIX
 
 
@@ -18,3 +18,5 @@ def init_routes(api):
     api.add_resource(UsersList, "/users")
 
     api.add_resource(Recovery, "/recovery/<string:username>")
+    api.add_resource(RecoveryList, "/recovery")
+

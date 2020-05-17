@@ -60,11 +60,6 @@ class AuthAPIClient:
                               json=data, headers=AuthAPIClient.__headers())
 
     @staticmethod
-    def get_recovery(username):
-        return requests.get("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "recovery/", username),
-                            headers=AuthAPIClient.__headers())
-
-    @staticmethod
     def get_users(filters):
         return requests.get("%s%s" % (conf.API_AUTH_CLIENT_URL, "users"),
                             params=filters, headers=AuthAPIClient.__headers())
@@ -73,3 +68,23 @@ class AuthAPIClient:
     def post_user(data):
         return requests.post("%s%s" % (conf.API_AUTH_CLIENT_URL, "users"),
                              json=data, headers=AuthAPIClient.__headers())
+
+    @staticmethod
+    def post_recovery_reset(username, data):
+        return requests.post("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "recovery/", username),
+                             json=data, headers=AuthAPIClient.__headers())
+
+    @staticmethod
+    def get_recovery(username):
+        return requests.get("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "recovery/", username),
+                            headers=AuthAPIClient.__headers())
+
+    @staticmethod
+    def post_recovery_request(data):
+        return requests.post("%s%s" % (conf.API_AUTH_CLIENT_URL, "recovery"),
+                             json=data, headers=AuthAPIClient.__headers())
+
+    @staticmethod
+    def get_recoveries():
+        return requests.get("%s%s" % (conf.API_AUTH_CLIENT_URL, "recovery"),
+                            headers=AuthAPIClient.__headers())
