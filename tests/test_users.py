@@ -138,26 +138,6 @@ class UsersTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.OK, r.status_code)
         self.assertEqual("ok", r.json["message"])
 
-    @patch('src.clients.auth_api.requests.post')
-    def test_post_valid_recovery_request_should_return_auth_api_response(self, mock_post):
-        mock_post.return_value.json.return_value = dict(recovery_key="123456")
-        mock_post.return_value.status_code = HTTPStatus.CREATED
-        r = self.app.post(
-            '/api/v1/recovery',
-            json=dict(username="testuser"))
-        self.assertEqual(HTTPStatus.CREATED, r.status_code)
-        self.assertEqual("123456", r.json["recovery_key"])
-
-    @patch('src.clients.auth_api.requests.post')
-    def test_post_valid_recovery_reset_should_return_auth_api_response(self, mock_post):
-        mock_post.return_value.json.return_value = dict(message="ok")
-        mock_post.return_value.status_code = HTTPStatus.CREATED
-        r = self.app.post(
-            '/api/v1/recovery/testuser',
-            json=dict(password="testpassword", recovery_key="123456"))
-        self.assertEqual(HTTPStatus.CREATED, r.status_code)
-        self.assertEqual("ok", r.json["message"])
-
 
 if __name__ == '__main__':
     unittest.main()

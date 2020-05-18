@@ -57,27 +57,3 @@ class UsersList(Resource):
     def get(self):
         response = AuthAPIClient.get_users(request.data)
         return response.json(), response.status_code
-
-
-class Recovery(Resource):
-
-    @check_token
-    def get(self, username):
-        response = AuthAPIClient.get_recovery(username)
-        return response.json(), response.status_code
-
-    def post(self, username):
-        response = AuthAPIClient.post_recovery_reset(username, request.data)
-        return response.json(), response.status_code
-
-
-class RecoveryList(Resource):
-
-    @check_token
-    def get(self):
-        response = AuthAPIClient.get_recoveries()
-        return response.json(), response.status_code
-
-    def post(self):
-        response = AuthAPIClient.post_recovery_request(request.data)
-        return response.json(), response.status_code
