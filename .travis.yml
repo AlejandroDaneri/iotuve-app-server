@@ -17,9 +17,9 @@ install:
   - docker-compose up -d
 script:
   #unit tests
-  - docker exec -it app-server-flask bash -c "python -m unittest tests/* -v"
+  - docker exec -it app-server-flask bash -c "python -m unittest discover -v"
   #coverage
-  - coverage run --omit */virtualenv/* -m unittest tests/* -v
+  - coverage run --omit */virtualenv/* -m unittest discover -v
 after_success:
   - coveralls
 deploy:
