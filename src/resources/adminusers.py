@@ -35,5 +35,5 @@ class AdminUsersList(Resource):
 
     @check_token
     def get(self):
-        response = AuthAPIClient.get_adminusers(request.get_json(force=True))
+        response = AuthAPIClient.get_adminusers(request.data)
         return response.json(), response.status_code
