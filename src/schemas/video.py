@@ -1,5 +1,4 @@
 from marshmallow import Schema, fields, validate, EXCLUDE, post_load
-from src.schemas.comment import CommentSchema
 from src.schemas.location import LocationSchema
 from src.models.video import Video
 
@@ -13,7 +12,7 @@ class StaticSchema(Schema):
     users = fields.List(fields.Str, required=True)
 
 
-class StaticsSchema(Schema):
+class StatisticsSchema(Schema):
 
     class Meta:
         unknown = EXCLUDE
@@ -42,9 +41,8 @@ class VideoSchema(Schema):
     description = fields.Str(required=False, validate=validate.Length(max=300), default=None)
     visibility = fields.Str(required=True, validate=validate.OneOf(["public", "private"]))
     media = fields.Nested(MediaSchema, required=True)
-    statics = fields.Nested(StaticsSchema, allow_none=True, dump_only=True, default=None)
+    statistics = fields.Nested(StatisticsSchema, dump_only=True, default=None)
     location = fields.Nested(LocationSchema, allow_none=True, default=None)
-    comments = fields.List(fields.Nested(CommentSchema), allow_none=True, dump_only=True, default=None)
     user = fields.Str(required=True, dump_only=True)
     date_created = fields.DateTime(required=True, dump_only=True)
     date_updated = fields.DateTime(required=True, dump_only=True)

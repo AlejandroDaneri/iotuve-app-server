@@ -41,10 +41,12 @@ class SchemaVideoTestCase(unittest.TestCase):
         dumped = schema.dump(loaded)
         self.assertEqual(dumped['title'], None)
         self.assertEqual(dumped['description'], None)
-        self.assertEqual(dumped['comments'], None)
         self.assertEqual(dumped['user'], None)
         self.assertEqual(dumped['visibility'], "public")
         self.assertEqual(dumped['media']['url'], "https://una.url.io/mediafield")
+        self.assertEqual(dumped['statistics'], {'dislikes': {'count': 0, 'users': []},
+                                                'likes': {'count': 0, 'users': []},
+                                                'views': {'count': 0, 'users': []}})
 
     def test_load_post_without_media_should_return_error(self):
         post_json = {
