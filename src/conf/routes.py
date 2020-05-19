@@ -1,3 +1,4 @@
+from src.resources.adminusers import AdminUsers, AdminUsersList
 from src.resources.recovery import Recovery, RecoveryList
 from src.resources.status import Home, Ping, Stats, Status
 from src.resources.sessions import Sessions
@@ -18,6 +19,9 @@ def init_routes(api):
 
     api.add_resource(Users, "/users/<string:username>")
     api.add_resource(UsersList, "/users")
+
+    api.add_resource(AdminUsers, "/adminusers/<string:username>")
+    api.add_resource(AdminUsersList, "/adminusers")
 
     api.add_resource(Recovery, "/recovery/<string:username>")
     api.add_resource(RecoveryList, "/recovery")
