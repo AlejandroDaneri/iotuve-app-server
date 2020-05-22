@@ -1,4 +1,5 @@
 from src.resources.adminusers import AdminUsers, AdminUsersList
+from src.resources.comments import Comments, CommentsList
 from src.resources.recovery import Recovery, RecoveryList
 from src.resources.status import Home, Ping, Stats, Status
 from src.resources.sessions import Sessions
@@ -28,4 +29,7 @@ def init_routes(api):
 
     api.add_resource(Videos, "/videos/<string:video_id>")
     api.add_resource(VideosList, "/videos")
+
+    api.add_resource(Comments, "/comments/<string:comment_id>")
+    api.add_resource(CommentsList, "/comments")
 
