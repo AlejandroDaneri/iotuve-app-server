@@ -4,9 +4,9 @@ from flask import make_response, request, g
 from flask_restful import Resource
 from marshmallow import ValidationError
 from src.misc.authorization import check_token
-from src.misc.responses import response_error
+from src.misc.responses import response_error, response_ok
 from src.models.video import Video
-from src.schemas.video import VideoSchema
+from src.schemas.video import VideoSchema, VideoPaginatedSchema
 
 
 class Videos(Resource):
@@ -34,13 +34,22 @@ class Videos(Resource):
         video.save()
         return make_response(schema.dump(video), HTTPStatus.OK)
 
+    @check_token
+    def delete(self, video_id):
+        video = Video.objects(id=video_id).first_or_404()
+        if video.user != g.session_username:
+            return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
+        video.delete()
+        return response_ok(HTTPStatus.OK, "Video deleted")
+
 
 class VideosList(Resource):
     @check_token
     def get(self):
-        schema = VideoSchema()
-        video = Video.objects()
-        return make_response(schema.dump(video, many=True), HTTPStatus.OK)
+        schema = VideoPaginatedSchema()
+        paginated = schema.load(request.args)
+        video = Video.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+        return make_response(dict(data=schema.dump(video, many=True)), HTTPStatus.OK)
 
     @check_token
     def post(self):

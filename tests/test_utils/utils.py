@@ -55,3 +55,4 @@ def get_video(video_id):
 def delete_all():
     Comment.objects().delete()
     Video.objects().delete()
+

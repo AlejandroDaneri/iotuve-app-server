@@ -119,6 +119,16 @@ class CommentsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.NOT_FOUND, r.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_comment_should_return_ok(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        comment = utils.save_new_comment()
+        res_get = self.app.get('/api/v1/comments/{}'.format(comment.id),
+                               headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.OK, res_get.status_code)
+        self.assertEqual(str(comment.id), res_get.json["id"])
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_comments_no_filter(self, mock_session):
         utils.delete_all()
         video = utils.save_new_video()
