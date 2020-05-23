@@ -5,6 +5,7 @@ from flask_restful import Resource
 from marshmallow import ValidationError
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
+from src.models.comment import Comment
 from src.models.video import Video
 from src.schemas.video import VideoSchema, VideoPaginatedSchema
 
@@ -40,6 +41,7 @@ class Videos(Resource):
         if video.user != g.session_username:
             return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
         video.delete()
+        Comment.objects(video=video_id).delete()
         return response_ok(HTTPStatus.OK, "Video deleted")
 
 

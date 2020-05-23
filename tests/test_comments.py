@@ -119,6 +119,29 @@ class CommentsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.NOT_FOUND, r.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_comment_should_return_ok(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        comment = utils.save_new_comment()
+        self.assertIsNotNone(utils.get_comment(comment.id))
+        res_del = self.app.delete('/api/v1/comments/{}'.format(comment.id),
+                                  headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.OK, res_del.status_code)
+        self.assertEqual("Comment deleted", res_del.json["message"])
+        self.assertIsNone(utils.get_comment(comment.id))
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_comment_not_owner_should_return_forbidden(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="otheruser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        comment = utils.save_new_comment()
+        self.assertIsNotNone(utils.get_comment(comment.id))
+        res_del = self.app.delete('/api/v1/comments/{}'.format(comment.id),
+                                  headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.FORBIDDEN, res_del.status_code)
+        self.assertIsNotNone(utils.get_comment(comment.id))
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_comment_should_return_ok(self, mock_session):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK

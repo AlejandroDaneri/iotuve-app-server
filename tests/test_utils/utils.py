@@ -52,6 +52,10 @@ def get_video(video_id):
     return Video.objects(id=video_id).first()
 
 
+def get_comment(comment_id):
+    return Comment.objects(id=comment_id).first()
+
+
 def delete_all():
     Comment.objects().delete()
     Video.objects().delete()

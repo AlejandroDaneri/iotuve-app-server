@@ -1,11 +1,10 @@
 import datetime
 from http import HTTPStatus
 from flask import make_response, request, g
-from flask import current_app as app
 from flask_restful import Resource
 from marshmallow import ValidationError
 from src.misc.authorization import check_token
-from src.misc.responses import response_error
+from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
 from src.models.video import Video
 from src.schemas.comment import CommentSchema, CommentPaginatedSchema
@@ -17,6 +16,15 @@ class Comments(Resource):
         schema = CommentSchema()
         comment = Comment.objects(id=comment_id).first_or_404()
         return make_response(schema.dump(comment), HTTPStatus.OK)
+
+    @check_token
+    def delete(self, comment_id):
+        comment = Comment.objects(id=comment_id).first_or_404()
+        if comment.user != g.session_username:
+            return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
+        comment.delete()
+        Comment.objects(parent=comment_id).delete()
+        return response_ok(HTTPStatus.OK, "Comment deleted")
 
 
 class CommentsList(Resource):
