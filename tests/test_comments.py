@@ -32,7 +32,7 @@ class CommentsTestCase(unittest.TestCase):
         parent = utils.save_new_comment()
         post_json = {
             "content": "Comentario de prueba",
-            "video": str(parent.video)
+            "video": str(parent.video.id)
         }
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -41,7 +41,7 @@ class CommentsTestCase(unittest.TestCase):
                           json=post_json)
         self.assertEqual(HTTPStatus.CREATED, r.status_code)
         self.assertEqual("Comentario de prueba", r.json["content"])
-        self.assertEqual(str(parent.video), r.json["video"])
+        self.assertEqual(str(parent.video.id), r.json["video"])
         self.assertEqual(None, r.json["parent"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
@@ -49,7 +49,7 @@ class CommentsTestCase(unittest.TestCase):
         parent = utils.save_new_comment()
         post_json = {
             "content": "Comentario de prueba",
-            "video": str(parent.video),
+            "video": str(parent.video.id),
             "parent": str(parent.id)
         }
         mock_session.return_value.json.return_value = dict(username="testuser")
@@ -59,7 +59,7 @@ class CommentsTestCase(unittest.TestCase):
                           json=post_json)
         self.assertEqual(HTTPStatus.CREATED, r.status_code)
         self.assertEqual("Comentario de prueba", r.json["content"])
-        self.assertEqual(str(parent.video), r.json["video"])
+        self.assertEqual(str(parent.video.id), r.json["video"])
         self.assertEqual(str(parent.id), r.json["parent"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
@@ -89,7 +89,7 @@ class CommentsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.NOT_FOUND, r.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_comment_no_existing_parent_should_return_not_found(self, mock_session):
+    def test_post_comment_with_parent_in_another_video_should_return_not_found(self, mock_session):
         parent = utils.save_new_comment()
         post_json = {
             "content": "Comentario de prueba",
@@ -104,7 +104,7 @@ class CommentsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.NOT_FOUND, r.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_comment_and_parent_other_video_should_return_not_found(self, mock_session):
+    def test_post_comment_with_no_existing_parent_should_return_not_found(self, mock_session):
         video = utils.save_new_video()
         post_json = {
             "content": "Comentario de prueba",

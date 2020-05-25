@@ -42,9 +42,9 @@ class CommentsList(Resource):
             comment = schema.load(request.get_json(force=True))
         except ValidationError as e:
             return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()))
-        Video.objects(id=comment.video).first_or_404()
+        Video.objects(id=comment.video.id).first_or_404()
         if comment.parent:
-            Comment.objects(id=comment.parent, video=comment.video).first_or_404()
+            Comment.objects(id=comment.parent.id, video=comment.video.id).first_or_404()
         now = datetime.datetime.utcnow()
         comment.user = g.session_username
         comment.date_created = now

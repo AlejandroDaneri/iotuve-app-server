@@ -1,6 +1,20 @@
 import typing
 from bson import ObjectId
+from marshmallow import fields
 from marshmallow.validate import Validator, ValidationError
+
+
+class ObjectIdField(fields.Field):
+    """ObjectId field that deserializes to an ObjectId object."""
+
+    def _deserialize(self, value, *args, **kwargs):
+        try:
+            return ObjectId(value)
+        except Exception as e:
+            raise ValidationError("Not a valid ObjectId.")
+
+    def _serialize(self, value, *args, **kwargs):
+        return str(value.id) if value else None
 
 
 class ObjectIdValidator(Validator):

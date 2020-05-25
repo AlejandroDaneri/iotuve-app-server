@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, validate, EXCLUDE, post_load
 from src.models.comment import Comment
 from src.schemas.pagination import PaginationSchema
-from src.misc.validators import ObjectIdValidator
+from src.misc.validators import ObjectIdValidator, ObjectIdField
 
 
 class CommentSchema(Schema):
@@ -11,8 +11,8 @@ class CommentSchema(Schema):
 
     id = fields.Str(required=True, dump_only=True)
     content = fields.Str(required=True, validate=validate.Length(min=1, max=2200))
-    video = fields.Str(required=True, validate=validate.Length(min=1))
-    parent = fields.Str(required=False)
+    video = ObjectIdField(required=True)
+    parent = ObjectIdField(required=False)
     user = fields.Str(required=True, dump_only=True)
     date_created = fields.DateTime(required=True, dump_only=True)
     date_updated = fields.DateTime(required=True, dump_only=True)
