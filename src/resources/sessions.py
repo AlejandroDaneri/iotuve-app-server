@@ -1,11 +1,7 @@
-from http import HTTPStatus
-from marshmallow import ValidationError
 from flask_restful import Resource
 from flask import request, g
 from src.misc.authorization import check_token
-from src.misc.responses import response_error
 from src.clients.auth_api import AuthAPIClient
-from src.schemas.user import UserSchema
 
 
 class Sessions(Resource):
