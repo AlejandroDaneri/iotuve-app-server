@@ -62,7 +62,7 @@ class SessionsTestCase(unittest.TestCase):
         self.assertEqual("123456", r.json["session_token"])
 
     @patch('src.clients.auth_api.requests.post')
-    def test_post_without_username_should_return_bad_request(self, mock_post):
+    def deprecated_test_post_without_username_should_return_bad_request(self, mock_post):
         mock_post.side_effect = Exception("should not call auth api post")
         r = self.app.post('/api/v1/sessions', json=dict(
             password="password"
@@ -70,7 +70,7 @@ class SessionsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)
 
     @patch('src.clients.auth_api.requests.post')
-    def test_post_without_password_should_return_bad_request(self, mock_post):
+    def deprecated_test_post_without_password_should_return_bad_request(self, mock_post):
         mock_post.side_effect = Exception("should not call auth api post")
         r = self.app.post('/api/v1/sessions', json=dict(
             username="testuser"
