@@ -38,7 +38,7 @@ LOG_CONFIG = {
         },
         'flask_cors': {
             'handlers': ['console'],
-            'level':'DEBUG',
+            'level':'ERROR',
         },
     }
 }
