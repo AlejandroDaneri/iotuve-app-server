@@ -22,9 +22,13 @@ class CommentsTestCase(unittest.TestCase):
         disconnect()
 
     def test_private_enpoints_comments_without_token_should_return_unauthorized(self):
+        res = self.app.post('/api/v1/comments')
+        self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
         res = self.app.get('/api/v1/comments')
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
         res = self.app.get('/api/v1/comments/1234')
+        self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
+        res = self.app.delete('/api/v1/comments/1234')
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
