@@ -1,7 +1,10 @@
 import datetime
+import uuid
 from src.schemas.comment import CommentSchema
+from src.schemas.friendship import FriendshipSchema
 from src.schemas.video import VideoSchema
 from src.models.comment import Comment
+from src.models.friendship import Friendship
 from src.models.video import Video
 
 
@@ -48,6 +51,26 @@ def save_new_comment(video=None, parent=None):
     return new_comment
 
 
+def save_new_friendship(from_user=None, to_user=None, status="pending"):
+    from_user = from_user or "fromusertest_%s" % uuid.uuid4()
+    to_user = to_user or "tousertest_%s" % uuid.uuid4()
+
+    post_json = {
+        "message": "Este es un mensaje de prueba",
+        "to_user": to_user
+    }
+
+    schema = FriendshipSchema()
+    new_friendship = schema.load(post_json)
+    now = datetime.datetime.utcnow()
+    new_friendship.from_user = from_user
+    new_friendship.status = status
+    new_friendship.date_created = now
+    new_friendship.date_updated = now
+    new_friendship.save()
+    return new_friendship
+
+
 def get_video(video_id):
     return Video.objects(id=video_id).first()
 
@@ -56,7 +79,47 @@ def get_comment(comment_id):
     return Comment.objects(id=comment_id).first()
 
 
+def get_friendship(friendship_id):
+    return Friendship.objects(id=friendship_id).first()
+
+
 def delete_all():
     Comment.objects().delete()
+    Friendship.objects().delete()
     Video.objects().delete()
 
+
+# def example_join(self):
+#     from src.models.comment import Comment
+#     for _ in range(1, 2):
+#         comment = save_new_comment()
+#         comment.save()
+#         for _ in range(1, 3):
+#             save_new_comment(parent=comment.id)
+#
+#     curosr = Comment.objects.aggregate(
+#         [
+#             {
+#                 "$lookup":
+#                 {
+#                     "from": "comment",
+#                     "localField": "_id",
+#                     "foreignField": "parent",
+#                     "as": "friendsData"
+#                 }
+#             },
+#             {
+#                 "$unwind": "$friendsData"
+#             },
+#             {
+#                 "$group":
+#                 {
+#                     "_id": "$_id",
+#                     "friendsData": { "$push": "$friendsData" }
+#                 }
+#             },
+#         ]
+#     )
+#     import pprint
+#     print(Comment._get_collection_name())
+#     pprint.pprint(list(curosr))
