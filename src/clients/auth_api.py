@@ -50,6 +50,11 @@ class AuthAPIClient:
                             headers=AuthAPIClient.__headers())
 
     @staticmethod
+    def delete_user(username):
+        return requests.delete("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "users/", username),
+                               headers=AuthAPIClient.__headers())
+
+    @staticmethod
     def put_user(username, data):
         return requests.put("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "users/", username),
                             json=data, headers=AuthAPIClient.__headers())
@@ -73,6 +78,11 @@ class AuthAPIClient:
     def get_adminuser(username):
         return requests.get("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "adminusers/", username),
                             headers=AuthAPIClient.__headers())
+
+    @staticmethod
+    def delete_adminuser(username):
+        return requests.delete("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "adminusers/", username),
+                               headers=AuthAPIClient.__headers())
 
     @staticmethod
     def put_adminuser(username, data):

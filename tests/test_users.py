@@ -4,6 +4,7 @@ from unittest.mock import patch
 from http import HTTPStatus
 from mongoengine import connect, disconnect
 
+# TODO Agregar tests para adminusers
 
 class UsersTestCase(unittest.TestCase):
 
@@ -58,6 +59,19 @@ class UsersTestCase(unittest.TestCase):
             '/api/v1/users/testuser',
             headers={'X-Auth-Token': '123456'},
             json=dict(op="replace", path="password", value="newpassword"))
+        self.assertEqual(HTTPStatus.OK, r.status_code)
+        self.assertEqual("ok", r.json["message"])
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    @patch('src.clients.auth_api.requests.delete')
+    def test_delete_user_should_return_auth_api_response(self, mock_delete, mock_session):
+        mock_delete.return_value.json.return_value = dict(message="ok")
+        mock_delete.return_value.status_code = HTTPStatus.OK
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        r = self.app.delete(
+            '/api/v1/users/testuser',
+            headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.OK, r.status_code)
         self.assertEqual("ok", r.json["message"])
 
