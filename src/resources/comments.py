@@ -33,7 +33,7 @@ class CommentsList(Resource):
         schema = CommentPaginatedSchema()
         paginated = schema.load(request.args)
         comment = Comment.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
-        return make_response(dict(data=schema.dump(comment, many=True)), HTTPStatus.OK)
+        return make_response(dict(data=CommentSchema().dump(comment, many=True)), HTTPStatus.OK)
 
     @check_token
     def post(self):

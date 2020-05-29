@@ -8,6 +8,7 @@ class FriendshipSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
+    id = fields.Str(required=True, dump_only=True)
     from_user = fields.Str(required=True, dump_only=True)
     to_user = fields.Str(required=True)
     message = fields.Str(required=True, validate=validate.Length(min=0, max=150))

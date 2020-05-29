@@ -51,7 +51,7 @@ class VideosList(Resource):
         schema = VideoPaginatedSchema()
         paginated = schema.load(request.args)
         video = Video.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
-        return make_response(dict(data=schema.dump(video, many=True)), HTTPStatus.OK)
+        return make_response(dict(data=VideoSchema().dump(video, many=True)), HTTPStatus.OK)
 
     @check_token
     def post(self):

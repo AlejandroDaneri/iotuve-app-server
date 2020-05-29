@@ -50,7 +50,7 @@ class FriendshipsList(Resource):
         schema = FriendshipPaginatedSchema()
         paginated = schema.load(request.args)
         friendships = Friendship.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
-        return make_response(dict(data=schema.dump(friendships, many=True)), HTTPStatus.OK)
+        return make_response(dict(data=FriendshipSchema().dump(friendships, many=True)), HTTPStatus.OK)
 
     @check_token
     def post(self):
@@ -80,3 +80,21 @@ class FriendshipsList(Resource):
         friendship.date_updated = now
         friendship.save()
         return make_response(schema.dump(friendship), HTTPStatus.CREATED)
+
+
+class FriendsByUser(Resource):
+
+    @check_token
+    def get(self, username):
+        friendships = Friendship.objects((Q(from_user=username) | Q(to_user=username)) & Q(status="approved"))
+        result = []
+        for friendship in friendships:
+            if friendship.from_user == username:
+                res = FriendshipSchema(exclude=("from_user",)).dump(friendship)
+                res["username"] = res.pop("to_user")
+                result.append(res)
+            elif friendship.to_user == username:
+                res = FriendshipSchema(exclude=("to_user",)).dump(friendship)
+                res["username"] = res.pop("from_user")
+                result.append(res)
+        return make_response(dict(friends=result), HTTPStatus.OK)

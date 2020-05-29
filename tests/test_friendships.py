@@ -228,3 +228,18 @@ class FriendRequestsTestCase(unittest.TestCase):
                          query_string=dict(from_user=from_user, status="approved", offset=0, limit=20))
         self.assertEqual(HTTPStatus.OK, r.status_code)
         self.assertEqual(10, len(r.json["data"]))
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_user_friends(self, mock_session):
+        username = "testuser"
+        for _ in range(0, 10):
+            utils.save_new_friendship(from_user=username, status="pending")
+            utils.save_new_friendship(from_user=username, status="approved")
+            utils.save_new_friendship(to_user=username, status="approved")
+
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        r = self.app.get('/api/v1/users/{}/friends'.format(username),
+                         headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.OK, r.status_code)
+        self.assertEqual(20, len(r.json["friends"]))
