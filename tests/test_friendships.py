@@ -236,10 +236,13 @@ class FriendRequestsTestCase(unittest.TestCase):
             utils.save_new_friendship(from_user=username, status="pending")
             utils.save_new_friendship(from_user=username, status="approved")
             utils.save_new_friendship(to_user=username, status="approved")
-
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get('/api/v1/users/{}/friends'.format(username),
                          headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.OK, r.status_code)
-        self.assertEqual(20, len(r.json["friends"]))
+        friends = r.json["friends"]
+        self.assertEqual(20, len(friends))
+        friend = friends[0]
+        self.assertIsNotNone(friend.get("friendship_id", None))
+        self.assertIsNotNone(friend.get("username", None))

@@ -91,10 +91,12 @@ class FriendsByUser(Resource):
         for friendship in friendships:
             if friendship.from_user == username:
                 res = FriendshipSchema(exclude=("from_user",)).dump(friendship)
+                res["friendship_id"] = res.pop("id")
                 res["username"] = res.pop("to_user")
                 result.append(res)
             elif friendship.to_user == username:
                 res = FriendshipSchema(exclude=("to_user",)).dump(friendship)
+                res["friendship_id"] = res.pop("id")
                 res["username"] = res.pop("from_user")
                 result.append(res)
         return make_response(dict(friends=result), HTTPStatus.OK)
