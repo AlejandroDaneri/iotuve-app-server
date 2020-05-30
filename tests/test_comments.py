@@ -21,6 +21,9 @@ class CommentsTestCase(unittest.TestCase):
     def tearDownClass(cls):
         disconnect()
 
+    def tearDown(self):
+        utils.delete_all()
+
     def test_private_enpoints_comments_without_token_should_return_unauthorized(self):
         res = self.app.post('/api/v1/comments')
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)

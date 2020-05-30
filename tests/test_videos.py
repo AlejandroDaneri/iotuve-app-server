@@ -20,6 +20,9 @@ class VideosTestCase(unittest.TestCase):
     def tearDownClass(cls):
         disconnect()
 
+    def tearDown(self):
+        utils.delete_all()
+
     def test_private_enpoints_videos_without_token_should_return_unauthorized(self):
         res = self.app.get('/api/v1/videos')
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
