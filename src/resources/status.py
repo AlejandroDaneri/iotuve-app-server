@@ -1,32 +1,29 @@
 from http import HTTPStatus
 from flask import current_app as app
-from flask import make_response
+from flask import make_response, request
 from flask_restful import Resource
 from src.conf import APP_NAME
 from src.models.stat import Stat
+from src.schemas.stat import StatSchema, StatPaginatedSchema
 
 
 class Home(Resource):
     def get(self):
         home_response_get = "Welcome to %s!" % APP_NAME
-        app.logger.debug('Displaying home with server information.')
         return make_response(home_response_get, HTTPStatus.OK)
 
 
 class Ping(Resource):
     def get(self):
-        app.logger.debug('Ping requested.')
         return make_response('Pong!', HTTPStatus.OK)
 
 
 class Stats(Resource):
     def get(self):
-        app.logger.debug(app.json_encoder.__name__)
-        stats = Stat
-        objectss = stats.objects()
-        oball = objectss.all()
-        result = [stat.to_json() for stat in oball]
-        return result, HTTPStatus.OK
+        schema = StatPaginatedSchema()
+        paginated = schema.load(request.args)
+        stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+        return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
 
 
 class Status(Resource):

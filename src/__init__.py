@@ -29,8 +29,18 @@ def create_app():
         from src.conf import APP_VERSION
         from src.models.stat import Stat
         diff = time.time() - g.start
-        stat = Stat(version=APP_VERSION, status=response.status_code, time=diff, full_path=request.full_path,
-                    request_id=g.request_id, timestamp=datetime.datetime.fromtimestamp(g.start))
+        stat = Stat(
+            timestamp=datetime.datetime.fromtimestamp(g.start),
+            version=APP_VERSION,
+            status=response.status_code,
+            time=diff,
+            request_id=g.request_id,
+            remote_ip=request.remote_addr,
+            method=request.method,
+            host=str(request.host.split(":", 1)[0]),
+            path=request.path,
+            full_path=request.full_path,
+            headers=request.headers)
         stat.save()
         response.headers.add('X-Request-ID', g.request_id)
         return response

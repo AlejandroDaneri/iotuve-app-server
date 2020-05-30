@@ -5,6 +5,7 @@ from src.schemas.friendship import FriendshipSchema
 from src.schemas.video import VideoSchema
 from src.models.comment import Comment
 from src.models.friendship import Friendship
+from src.models.stat import Stat
 from src.models.video import Video
 
 
@@ -86,6 +87,7 @@ def get_friendship(friendship_id):
 def delete_all():
     Comment.objects().delete()
     Friendship.objects().delete()
+    Stat.objects().delete()
     Video.objects().delete()
 
 
