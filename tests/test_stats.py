@@ -70,8 +70,6 @@ class StatusTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.OK, res.status_code)
         self.assertEqual(APP_NAME, res.json['message'])
 
-    def test_dos(self):
-        utils.test_stats(self.app)
 
 if __name__ == '__main__':
     unittest.main()

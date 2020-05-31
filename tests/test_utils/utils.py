@@ -91,6 +91,53 @@ def delete_all():
     Video.objects().delete()
 
 
+# def test_stats(app):
+#     import random
+#     for _ in range(0, 4):
+#         app.get('/api/v1/ping')
+#         app.get('/api/v1/')
+#
+#     for _ in range(0, 10):
+#         video = save_new_video()
+#         for _ in range(0, random.randint(0, 6)):
+#             comm = save_new_comment(video.id)
+#
+#             for _ in range(0, random.randint(0, 9)):
+#                 save_new_comment(video.id, comm.id)
+#
+#     from src.services.stats import StatisticsService
+#
+#     import pprint
+#     pprint.pprint(StatisticsService.count_requests(datetime.datetime(year=2020, month=5, day=28), datetime.datetime.utcnow()))
+#     pprint.pprint(list(StatisticsService.count_requests_grouped_by_status(datetime.datetime(year=2020, month=5, day=28), datetime.datetime.utcnow())))
+#     pprint.pprint(list(StatisticsService.count_requests_grouped_by_path(datetime.datetime(year=2020, month=5, day=28), datetime.datetime.utcnow())))
+#     pprint.pprint(StatisticsService.count_videos(datetime.datetime(year=2020, month=5, day=28), datetime.datetime.utcnow()))
+#     pprint.pprint(StatisticsService.count_comments(datetime.datetime(year=2020, month=5, day=28), datetime.datetime.utcnow()))
+#     pprint.pprint(StatisticsService.count_friendships(datetime.datetime(year=2020, month=5, day=28), datetime.datetime.utcnow()))
+#
+#
+#
+#     return
+#
+#     from bson.son import SON
+#
+#     pipeline = [
+#              #{"$unwind": "$tags"},
+#              {"$group": {
+#                  "_id": {
+#                      "method": "$method",
+#                      "status": "$status",
+#                      "path": "$path",
+#                  },
+#                  "count": {
+#                      "$sum": 1
+#                  }
+#              }},
+#              {"$sort": SON([("count", -1), ("_id", -1)])}
+#             ]
+#     import pprint
+#     pprint.pprint(list(Stat.objects.aggregate(pipeline)))
+
 # def example_join(self):
 #     from src.models.comment import Comment
 #     for _ in range(1, 2):
