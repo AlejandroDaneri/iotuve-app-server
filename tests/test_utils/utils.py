@@ -2,6 +2,7 @@ import datetime
 import uuid
 from src.schemas.comment import CommentSchema
 from src.schemas.friendship import FriendshipSchema
+from src.schemas.stat import StatSchema
 from src.schemas.video import VideoSchema
 from src.models.comment import Comment
 from src.models.friendship import Friendship
@@ -9,7 +10,18 @@ from src.models.stat import Stat
 from src.models.video import Video
 
 
-def save_new_video():
+def save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.000438690185546875):
+    data_json = {'path': path, 'full_path': path,
+                 'headers': {'Host': 'localhost', 'User-Agent': 'werkzeug/1.0.1'},
+                 'host': 'localhost', 'method': 'GET', 'remote_ip': '127.0.0.1',
+                 'request_id': '67910060-3a28-46a3-9957-f037f6661e28', 'status': status, 'time': time,
+                 'timestamp': timestamp, 'version': 'v1'}
+    schema = StatSchema()
+    new_stat = schema.load(data_json)
+    new_stat.save()
+
+
+def save_new_video(date_created=None):
     post_json = {
         "title": "Un titulo",
         "description": "Una descripcion",
@@ -24,7 +36,7 @@ def save_new_video():
     }
     schema = VideoSchema()
     new_video = schema.load(post_json)
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.utcnow() if not date_created else date_created
     new_video.user = "testuser"
     new_video.date_created = now
     new_video.date_updated = now
@@ -32,7 +44,7 @@ def save_new_video():
     return new_video
 
 
-def save_new_comment(video=None, parent=None):
+def save_new_comment(video=None, parent=None, date_created=None):
     if not video:
         video = save_new_video().id
     post_json = {
@@ -44,7 +56,7 @@ def save_new_comment(video=None, parent=None):
         post_json["parent"] = str(parent)
     schema = CommentSchema()
     new_comment = schema.load(post_json)
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.utcnow() if not date_created else date_created
     new_comment.user = "testuser"
     new_comment.date_created = now
     new_comment.date_updated = now
@@ -52,7 +64,7 @@ def save_new_comment(video=None, parent=None):
     return new_comment
 
 
-def save_new_friendship(from_user=None, to_user=None, status="pending"):
+def save_new_friendship(from_user=None, to_user=None, status="pending", date_created=None):
     from_user = from_user or "fromusertest_%s" % uuid.uuid4()
     to_user = to_user or "tousertest_%s" % uuid.uuid4()
 
@@ -63,7 +75,7 @@ def save_new_friendship(from_user=None, to_user=None, status="pending"):
 
     schema = FriendshipSchema()
     new_friendship = schema.load(post_json)
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.utcnow() if not date_created else date_created
     new_friendship.from_user = from_user
     new_friendship.status = status
     new_friendship.date_created = now

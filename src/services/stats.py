@@ -12,6 +12,25 @@ class StatisticsService:
         return Stat.objects(timestamp__gte=date_from, timestamp__lte=date_to).count()
 
     @staticmethod
+    def rpm(date_from, date_to):
+        pipeline = [
+            {'$project': {
+                'datetime': {
+                    '$dateToString': {
+                        'date': '$timestamp',
+                        'format': '%Y-%m-%d %H:%M'
+            }}}},
+            {"$group": {
+                "_id": '$datetime',
+                "count": {
+                    "$sum": 1
+                }
+            }}
+        ]
+        return (req for req in Stat.objects(
+            timestamp__gte=date_from, timestamp__lte=date_to).aggregate(pipeline))
+
+    @staticmethod
     def count_requests_grouped_by_status(date_from, date_to):
         pipeline = [
             {"$group": {
@@ -23,8 +42,10 @@ class StatisticsService:
                 }
             }}
         ]
-        return ({str(req["_id"]["status"]): req["count"]} for req in Stat.objects(
-            timestamp__gte=date_from, timestamp__lte=date_to).aggregate(pipeline))
+        result = {}
+        for req in Stat.objects(timestamp__gte=date_from, timestamp__lte=date_to).aggregate(pipeline):
+            result[str(req["_id"]["status"])] = req["count"]
+        return result
 
     @staticmethod
     def count_requests_grouped_by_path(date_from, date_to):
@@ -39,8 +60,10 @@ class StatisticsService:
             }},
             {"$sort": SON([("count", -1), ("_id", -1)])}
         ]
-        return ({str(req["_id"]["path"]): req["count"]} for req in Stat.objects(
-            timestamp__gte=date_from, timestamp__lte=date_to).aggregate(pipeline))
+        result = {}
+        for req in Stat.objects(timestamp__gte=date_from, timestamp__lte=date_to).aggregate(pipeline):
+            result[str(req["_id"]["path"])] = req["count"]
+        return result
 
     @staticmethod
     def count_videos(date_from, date_to):

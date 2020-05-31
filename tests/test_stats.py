@@ -1,9 +1,11 @@
+import datetime
 import unittest
 import app_server
 from http import HTTPStatus
 from mongoengine import connect, disconnect
 from src.conf import APP_NAME
 from tests.test_utils import utils
+from src.services.stats import StatisticsService
 
 
 class StatusTestCase(unittest.TestCase):
@@ -14,7 +16,8 @@ class StatusTestCase(unittest.TestCase):
         app.config['TESTING'] = True
         cls.app = app.test_client()
         disconnect()
-        connect('mongoenginetest', host='mongomock://localhost')
+        client = connect('mongoenginetest', host='mongomock://localhost')
+        cls.db = client['mongoenginetest']
 
     @classmethod
     def tearDownClass(cls):
@@ -69,6 +72,65 @@ class StatusTestCase(unittest.TestCase):
         res = self.app.get('/api/v1/status')
         self.assertEqual(HTTPStatus.OK, res.status_code)
         self.assertEqual(APP_NAME, res.json['message'])
+
+    def test_statistics_requests(self):
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:37:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:37:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:37:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:37:53.074000', status=200, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:37:53.074000', status=400, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:37:53.074000', status=400, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:38:53.074000', status=400, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:38:53.074000', status=400, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:38:53.074000', status=500, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:38:53.074000', status=500, time=0.1)
+        utils.save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:38:53.074000', status=500, time=0.1)
+
+        # count
+        count = StatisticsService.count_requests(datetime.datetime(year=2020, month=5, day=28),
+                                                 datetime.datetime(year=2020, month=6, day=1))
+        self.assertEqual(count, 14)
+
+        # rpm
+        result = list(StatisticsService.rpm(datetime.datetime(year=2020, month=5, day=28),
+                                            datetime.datetime(year=2020, month=6, day=1)))
+        self.assertEqual(result[0]["count"], 3)
+        self.assertEqual(result[1]["count"], 6)
+        self.assertEqual(result[2]["count"], 5)
+
+        # by status
+        result = StatisticsService.count_requests_grouped_by_status(datetime.datetime(year=2020, month=5, day=28),
+                                                                    datetime.datetime(year=2020, month=6, day=1))
+        self.assertEqual(result['200'], 7)
+        self.assertEqual(result['400'], 4)
+        self.assertEqual(result['500'], 3)
+
+        # by path
+        result = StatisticsService.count_requests_grouped_by_path(datetime.datetime(year=2020, month=5, day=28),
+                                                                  datetime.datetime(year=2020, month=6, day=1))
+        self.assertEqual(result['/api/v1/ping'], 14)
+
+    def tests_statistics_counter(self):
+        # TODO: Mejorar tests
+        video = utils.save_new_video(date_created=datetime.datetime(year=2020, month=5, day=29))
+        comm = utils.save_new_comment(video=video.id, date_created=datetime.datetime(year=2020, month=5, day=29))
+        utils.save_new_comment(video=video.id, parent=comm.id,
+                               date_created=datetime.datetime(year=2020, month=6, day=2))
+
+        videos = StatisticsService.count_videos(datetime.datetime(year=2020, month=5, day=28),
+                                                datetime.datetime(year=2020, month=6, day=1))
+        self.assertEqual(videos, 1)
+
+        comments = StatisticsService.count_comments(datetime.datetime(year=2020, month=5, day=28),
+                                                    datetime.datetime(year=2020, month=6, day=1))
+        self.assertEqual(comments, 1)
+
+        friendships = StatisticsService.count_friendships(datetime.datetime(year=2020, month=5, day=28),
+                                                          datetime.datetime(year=2020, month=6, day=1))
+        self.assertEqual(friendships, 0)
 
 
 if __name__ == '__main__':
