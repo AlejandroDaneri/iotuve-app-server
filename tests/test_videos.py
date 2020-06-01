@@ -57,7 +57,7 @@ class VideosTestCase(unittest.TestCase):
         url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
         mock_media.return_value.json.return_value = dict(name="mediafile", video_id="1234", date_created="2020-05-01",
                                                          url=url, thumb=url, size=3215421, type="video/mp4")
-        mock_media.return_value.status_code = HTTPStatus.OK
+        mock_media.return_value.status_code = HTTPStatus.CREATED
 
         resp = self.app.post('/api/v1/videos', headers={'X-Auth-Token': '123456'}, json=post_json)
         self.assertEqual(HTTPStatus.CREATED, resp.status_code)
@@ -67,18 +67,18 @@ class VideosTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_media_server_error_on_post_video_should_return_server_error(self, mock_session, mock_media):
         post_json = {
-            'title': 'Un titulo',
-            'description': 'Una descripcion',
-            'visibility': 'public',
-            'media': {
-                'name': 'mediafile',
-                'date_created': '2020-05-30T02:36:53.074000',
-                'size': 3215421,
-                'type': 'video/mp4'
+            "title": "Un titulo",
+            "description": "Una descripcion",
+            "visibility": "public",
+            "media": {
+                "name": "mediafile",
+                "date_created": "2020-05-30T02:36:53.074000",
+                "size": 3215421,
+                "type": "video/mp4"
             },
-            'location': {
-                'latitude': 1212121.232323,
-                'longitude': 1212121.232323
+            "location": {
+                "latitude": 1212121.232323,
+                "longitude": 1212121.232323
             }
         }
         mock_session.return_value.json.return_value = dict(username="testuser")

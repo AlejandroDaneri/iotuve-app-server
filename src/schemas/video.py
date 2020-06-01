@@ -11,6 +11,7 @@ class MediaSchema(Schema):
         unknown = EXCLUDE
 
     video_id = fields.Str(required=True, dump_only=True)
+    user_id = fields.Str(required=True, dump_only=True)
     name = fields.String(required=True)
     size = fields.Float(required=True)
     type = fields.Str(requirede=True)

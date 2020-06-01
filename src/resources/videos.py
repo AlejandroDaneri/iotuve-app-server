@@ -19,7 +19,7 @@ class Videos(Resource):
         resp_media = MediaAPIClient.get_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                             (video.id, resp_media.json()["message"]))
+                             (video.id, resp_media.text))
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
         result = schema.dump(video)
         result["media"] = resp_media.json()
@@ -44,7 +44,7 @@ class Videos(Resource):
         resp_media = MediaAPIClient.get_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                             (video.id, resp_media.json()["message"]))
+                             (video.id, resp_media.text))
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
         result = schema.dump(video)
         result["media"] = resp_media.json()
@@ -58,7 +58,7 @@ class Videos(Resource):
         resp_media = MediaAPIClient.delete_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error deleting media from media-server: %s" %
-                             (video.id, resp_media.json()["message"]))
+                             (video.id, resp_media.text))
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
         video.delete()
         Comment.objects(video=video_id).delete()
@@ -76,7 +76,7 @@ class VideosList(Resource):
             resp_media = MediaAPIClient.get_video(video.id)
             if resp_media.status_code != HTTPStatus.OK:
                 app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                                 (video.id, resp_media.json()["message"]))
+                                 (video.id, resp_media.text))
                 continue
             result = schema.dump(video)
             result["media"] = resp_media.json()
@@ -99,12 +99,13 @@ class VideosList(Resource):
         video.date_updated = now
         new_video = video.save()
         media["video_id"] = new_video.id
-        res = MediaAPIClient.post_video(schema_media.dump(media))
-        if res.status_code != HTTPStatus.OK:
+        media["user_id"] = new_video.user
+        resp_media = MediaAPIClient.post_video(schema_media.dump(media))
+        if resp_media.status_code != HTTPStatus.CREATED:
             app.logger.error("[video_name:%s] Error saving new video on media-server: %s" %
-                             (media["name"], res.json()["message"]))
+                             (media["name"], resp_media.text))
             video.delete()
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error saving media")
         result = schema_video.dump(new_video)
-        result["media"] = res.json()
+        result["media"] = resp_media.json()
         return make_response(result, HTTPStatus.CREATED)
