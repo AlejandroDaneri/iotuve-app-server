@@ -5,6 +5,18 @@ from src.models.video import Video
 from src.misc.validators import ObjectIdValidator
 
 
+class MediaSchema(Schema):
+
+    class Meta:
+        unknown = EXCLUDE
+
+    video_id = fields.Str(required=True, dump_only=True)
+    name = fields.String(required=True)
+    size = fields.Float(required=True)
+    type = fields.Str(requirede=True)
+    date_created = fields.DateTime(required=True)
+
+
 class StaticSchema(Schema):
 
     class Meta:
@@ -24,15 +36,6 @@ class StatisticsSchema(Schema):
     dislikes = fields.Nested(StaticSchema, required=True)
 
 
-class MediaSchema(Schema):
-
-    class Meta:
-        unknown = EXCLUDE
-
-    id = fields.Int(required=True, dump_only=True)
-    url = fields.URL(required=True)
-
-
 class VideoSchema(Schema):
 
     class Meta:
@@ -42,7 +45,6 @@ class VideoSchema(Schema):
     title = fields.Str(required=False, validate=validate.Length(max=100), default=None)
     description = fields.Str(required=False, validate=validate.Length(max=300), default=None)
     visibility = fields.Str(required=True, validate=validate.OneOf(["public", "private"]))
-    media = fields.Nested(MediaSchema, required=True)
     statistics = fields.Nested(StatisticsSchema, dump_only=True, default=None)
     location = fields.Nested(LocationSchema, allow_none=True, default=None)
     user = fields.Str(required=True, dump_only=True)
@@ -50,7 +52,7 @@ class VideoSchema(Schema):
     date_updated = fields.DateTime(required=True, dump_only=True)
 
     @post_load
-    def make_user(self, data, **kwargs):
+    def make_video(self, data, **kwargs):
         return Video(**data)
 
 

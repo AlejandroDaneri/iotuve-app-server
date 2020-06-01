@@ -5,7 +5,6 @@ class Video(db.Document):
     title = db.StringField(required=False, default=None)
     description = db.StringField(required=False, default=None)
     visibility = db.StringField(required=True)
-    media = db.DictField(required=True)
     statistics = db.DictField(
         required=False,
         default=dict(

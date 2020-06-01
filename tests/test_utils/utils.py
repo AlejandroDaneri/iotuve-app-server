@@ -23,21 +23,24 @@ def save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', s
 
 def save_new_video(date_created=None):
     post_json = {
-        "title": "Un titulo",
-        "description": "Una descripcion",
-        "visibility": "public",
-        "media": {
-            "url": "https://una.url.io/mediafield"
+        'title': 'Un titulo',
+        'description': 'Una descripcion',
+        'visibility': 'public',
+        'media': {
+            'name': 'mediafile',
+            'date_created': '2020-05-30T02:36:53.074000',
+            'size': 3215421,
+            'type': 'video/mp4'
         },
-        "location": {
-            "latitude": 1212121.232323,
-            "longitude": 1212121.232323
+        'location': {
+            'latitude': 1212121.232323,
+            'longitude': 1212121.232323
         }
     }
     schema = VideoSchema()
     new_video = schema.load(post_json)
     now = datetime.datetime.utcnow() if not date_created else date_created
-    new_video.user = "testuser"
+    new_video.user = 'testuser'
     new_video.date_created = now
     new_video.date_updated = now
     new_video.save()
