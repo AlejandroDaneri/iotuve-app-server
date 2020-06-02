@@ -14,23 +14,27 @@ from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
 class Videos(Resource):
     @check_token
     def get(self, video_id):
-        schema = VideoSchema()
-        video = Video.objects(id=video_id).first_or_404()
+        video = Video.objects(id=video_id).first()
+        if video is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         resp_media = MediaAPIClient.get_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
                              (video.id, resp_media.text))
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
+        schema = VideoSchema()
         result = schema.dump(video)
         result["media"] = resp_media.json()
         return make_response(result, HTTPStatus.OK)
 
     @check_token
     def put(self, video_id):
-        schema = VideoSchema()
-        video = Video.objects(id=video_id).first_or_404()
+        video = Video.objects(id=video_id).first()
+        if video is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if video.user != g.session_username:
             return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
+        schema = VideoSchema()
         try:
             new_video = schema.load(request.get_json(force=True))
         except ValidationError as e:
@@ -52,7 +56,9 @@ class Videos(Resource):
 
     @check_token
     def delete(self, video_id):
-        video = Video.objects(id=video_id).first_or_404()
+        video = Video.objects(id=video_id).first()
+        if video is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if video.user != g.session_username:
             return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
         resp_media = MediaAPIClient.delete_video(video.id)

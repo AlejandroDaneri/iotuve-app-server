@@ -15,7 +15,10 @@ class Friendships(Resource):
 
     @check_token
     def put(self, friendship_id):
-        friendship = Friendship.objects(id=friendship_id).first_or_404()
+        friendship = Friendship.objects(id=friendship_id).first()
+
+        if friendship is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Friendship not found")
 
         if friendship.to_user != g.session_username:
             return response_error(HTTPStatus.FORBIDDEN, "Cant modify this friend request")
@@ -36,7 +39,9 @@ class Friendships(Resource):
 
     @check_token
     def delete(self, friendship_id):
-        friendship = Friendship.objects(id=friendship_id).first_or_404()
+        friendship = Friendship.objects(id=friendship_id).first()
+        if friendship is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Friendship not found")
         if g.session_username not in (friendship.from_user, friendship.to_user):
             return response_error(HTTPStatus.FORBIDDEN, "Cant delete this friend request")
         friendship.delete()
@@ -58,7 +63,6 @@ class FriendshipsList(Resource):
         try:
             friendship = schema.load(request.get_json(force=True))
         except ValidationError as e:
-            app.logger.debug(str(e.normalized_messages()))
             return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()), code=-1)
 
         friendship.from_user = g.session_username
