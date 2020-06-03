@@ -11,7 +11,8 @@ class AuthAPIClient:
                    'X-Request-ID': g.request_id}
         if g.session_token:
             headers['X-Auth-Token'] = g.session_token
-
+        if g.session_admin:
+            headers['X-Admin'] = 'true'
         return headers
 
     @staticmethod

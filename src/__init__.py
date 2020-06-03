@@ -9,7 +9,7 @@ def create_app():
 
     api = Api(app)
 
-    from src.misc.requests import request_id
+    from src.misc.requests import request_id, is_admin
     from src.conf.database import init_db
     from src.conf.routes import init_routes
 
@@ -19,8 +19,11 @@ def create_app():
     @app.before_request
     def before_request():
         g.start = time.time()
-        g.session_token = None  # value initialized on check_token
+        g.request_id = None  # value initialized on request_id()
+        g.session_token = None  # values initialized on check_token()
+        g.session_admin = None  # values initialized on is_admin()
         request_id()
+        is_admin()
 
     @app.after_request
     @cross_origin()

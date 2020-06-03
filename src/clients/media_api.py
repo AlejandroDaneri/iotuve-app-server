@@ -9,9 +9,6 @@ class MediaAPIClient:
     def __headers():
         headers = {'X-Client-ID': conf.API_MEDIA_CLIENT_ID,
                    'X-Request-ID': g.request_id}
-        if g.session_token:
-            headers['X-Auth-Token'] = g.session_token
-
         return headers
 
     @staticmethod

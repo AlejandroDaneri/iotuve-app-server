@@ -4,6 +4,11 @@ from flask import g, has_request_context
 from flask import request
 
 
+# Check header X-Admin
+def is_admin():
+    g.session_admin = request.headers.get("X-Admin", "").lower() == "true"
+
+
 # Returns the current request ID or a new one if there is none
 def request_id():
     if getattr(g, 'request_id', None):
