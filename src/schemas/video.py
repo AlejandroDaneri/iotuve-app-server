@@ -64,7 +64,7 @@ class VideoPaginatedSchema(PaginationSchema):
 
     id = fields.Str(required=False, validate=ObjectIdValidator(error="Is not a valid Video Id"))
     visibility = fields.Str(required=False, validate=validate.OneOf(["public", "private"]))
-    user = fields.Str(required=False, validate=ObjectIdValidator(error="Is not a valid User Id"))
+    user = fields.Str(required=False)
 
     @post_load
     def make_paginated(self, data, **kwargs):

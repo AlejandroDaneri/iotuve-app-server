@@ -305,6 +305,16 @@ class VideosTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.OK, resp.status_code)
         self.assertEqual(10, len(resp.json["data"]))
 
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'},
+                            query_string=dict(offset=0, limit=50, user='testuser'))
+        self.assertEqual(HTTPStatus.OK, resp.status_code)
+        self.assertEqual(24, len(resp.json["data"]))
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'},
+                            query_string=dict(offset=0, limit=50, user='otheruser'))
+        self.assertEqual(HTTPStatus.OK, resp.status_code)
+        self.assertEqual(0, len(resp.json["data"]))
+
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_media_server_error_on_get_videos_should_not_return_server_error(self, mock_session, mock_media):
