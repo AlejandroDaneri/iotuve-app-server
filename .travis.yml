@@ -12,12 +12,17 @@ before_install:
   - echo "$HEROKU_PASSWORD" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
 install:
   - pip3 install -r requirements.txt
+  - pip3 install git+https://github.com/mongomock/mongomock.git@26058e8c4c93bc014c6b05078deb797baaf7b725
   # build dockerized environment to run tests
   - docker-compose build
   - docker-compose up -d
 script:
   #unit tests
-  - docker exec -it app-server-flask bash -c "python -m unittest -v"
+  #- docker exec -it app-server-flask bash -c "python -m unittest discover -v"
+  #coverage
+  - coverage run --omit */virtualenv/* -m unittest discover -v
+after_success:
+  - coveralls
 deploy:
   - provider: script
     script:

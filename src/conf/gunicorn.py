@@ -1,4 +1,5 @@
-import os, multiprocessing
+import multiprocessing
+from src.conf import APP_HOST, APP_PORT, LOG_LEVEL
 
 # Chotuve - Gunicorn configuration file.
 #
@@ -18,7 +19,7 @@ import os, multiprocessing
 #       Must be a positive integer. Generally set in the 64-2048
 #       range.
 #
-bind = '0.0.0.0:' + str(os.environ.get("APP_PORT", os.environ.get("PORT", 8000)))
+bind = '%s:%s' % (APP_HOST, APP_PORT)
 backlog = 2048
 #
 # Worker processes
@@ -136,10 +137,10 @@ tmp_upload_dir = None
 #       A string of "debug", "info", "warning", "error", "critical"
 #
 logfile = '/var/log/gunicorn/log.log'
-loglevel = str(os.environ.get("GUNICORN_LOG_LEVEL", "debug"))
+loglevel = LOG_LEVEL
 errorlog = '-'
 accesslog = '-'
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+access_log_format = 'remote-ip=%(h)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" time="%(T)s" process-id="%(p)s" request-id-i="%({x-request-id}i)s" request-id-o="%({x-request-id}o)s"'
 #
 # Process naming
 #
@@ -170,22 +171,28 @@ proc_name = 'app_server'
 #
 #       A callable that takes a server instance as the sole argument.
 #
+
+
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
+
 
 def pre_fork(server, worker):
     pass
 
+
 def pre_exec(server):
     server.log.info("Forked child, re-executing.")
+
 
 def when_ready(server):
     server.log.info("Server is ready. Spawning workers")
 
+
 def worker_int(worker):
     worker.log.info("worker received INT or QUIT signal")
 
-    ## Get traceback info
+    # Get traceback info
     import threading, sys, traceback
     id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
@@ -196,6 +203,7 @@ def worker_int(worker):
             if line:
                 code.append("  %s" % (line.strip()))
     worker.log.debug("\n".join(code))
+
 
 def worker_abort(worker):
     worker.log.info("worker received SIGABRT signal")

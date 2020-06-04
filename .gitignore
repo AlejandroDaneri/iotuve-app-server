@@ -2,4 +2,8 @@
 .DS_Store
 /venv
 /tests/__pycache__
+
 *.pyc
+
+/htmlcov
+.coverage
