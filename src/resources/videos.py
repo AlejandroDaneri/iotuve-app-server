@@ -84,7 +84,7 @@ class VideosList(Resource):
                 app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
                                  (video.id, resp_media.text))
                 continue
-            result = schema.dump(video)
+            result = VideoSchema().dump(video)
             result["media"] = resp_media.json()
             results.append(result)
         return make_response(dict(data=results), HTTPStatus.OK)
