@@ -18,25 +18,6 @@ class MediaSchema(Schema):
     date_created = fields.DateTime(required=True)
 
 
-class StaticSchema(Schema):
-
-    class Meta:
-        unknown = EXCLUDE
-
-    count = fields.Int(required=True)
-    users = fields.List(fields.Str, required=True)
-
-
-class StatisticsSchema(Schema):
-
-    class Meta:
-        unknown = EXCLUDE
-
-    views = fields.Nested(StaticSchema, required=True)
-    likes = fields.Nested(StaticSchema, required=True)
-    dislikes = fields.Nested(StaticSchema, required=True)
-
-
 class VideoSchema(Schema):
 
     class Meta:
@@ -46,8 +27,10 @@ class VideoSchema(Schema):
     title = fields.Str(required=False, validate=validate.Length(max=100), default=None)
     description = fields.Str(required=False, validate=validate.Length(max=300), default=None)
     visibility = fields.Str(required=True, validate=validate.OneOf(["public", "private"]))
-    statistics = fields.Nested(StatisticsSchema, dump_only=True, default=None)
     location = fields.Nested(LocationSchema, allow_none=True, default=None)
+    count_likes = fields.Int(dump_only=True, default=0)
+    count_dislikes = fields.Int(dump_only=True, default=0)
+    count_views = fields.Int(dump_only=True, default=0)
     user = fields.Str(required=True, dump_only=True)
     date_created = fields.DateTime(required=True, dump_only=True)
     date_updated = fields.DateTime(required=True, dump_only=True)

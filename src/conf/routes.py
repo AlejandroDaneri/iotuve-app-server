@@ -1,6 +1,7 @@
 from src.resources.adminusers import AdminUsers, AdminUsersList
 from src.resources.comments import Comments, CommentsList
 from src.resources.friendships import Friendships, FriendshipsList, FriendsByUser
+from src.resources.likes import Likes, LikesList
 from src.resources.recovery import Recovery, RecoveryList
 from src.resources.status import Home, Ping, Stats, Status
 from src.resources.sessions import Sessions
@@ -38,3 +39,5 @@ def init_routes(api):
     api.add_resource(FriendshipsList, "/friendships")
     api.add_resource(FriendsByUser, "/users/<string:username>/friends")
 
+    api.add_resource(Likes, "/videos/<string:video_id>/likes/me")
+    api.add_resource(LikesList, "/videos/<string:video_id>/likes")

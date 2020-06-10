@@ -43,9 +43,9 @@ class SchemaVideoTestCase(unittest.TestCase):
         self.assertEqual(dumped['description'], None)
         self.assertEqual(dumped['user'], None)
         self.assertEqual(dumped['visibility'], "public")
-        self.assertEqual(dumped['statistics'], {'dislikes': {'count': 0, 'users': []},
-                                                'likes': {'count': 0, 'users': []},
-                                                'views': {'count': 0, 'users': []}})
+        self.assertEqual(dumped['count_likes'], 0)
+        self.assertEqual(dumped['count_dislikes'], 0)
+        self.assertEqual(dumped['count_views'], 0)
 
     def test_load_valid_media_should_return_ok(self):
         post_json = {

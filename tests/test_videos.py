@@ -292,7 +292,7 @@ class VideosTestCase(unittest.TestCase):
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_videos_paginated(self, mock_session, mock_media):
-        for _ in range(1, 25):
+        for _ in range(0, 25):
             utils.save_new_video()
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -308,7 +308,7 @@ class VideosTestCase(unittest.TestCase):
         resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'},
                             query_string=dict(offset=0, limit=50, user='testuser'))
         self.assertEqual(HTTPStatus.OK, resp.status_code)
-        self.assertEqual(24, len(resp.json["data"]))
+        self.assertEqual(25, len(resp.json["data"]))
 
         resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'},
                             query_string=dict(offset=0, limit=50, user='otheruser'))

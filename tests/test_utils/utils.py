@@ -6,6 +6,7 @@ from src.schemas.stat import StatSchema
 from src.schemas.video import VideoSchema
 from src.models.comment import Comment
 from src.models.friendship import Friendship
+from src.models.like import Like
 from src.models.stat import Stat
 from src.models.video import Video
 
@@ -67,6 +68,21 @@ def save_new_comment(video=None, parent=None, date_created=None):
     return new_comment
 
 
+def save_new_video_like(video=None, user=None, date_created=None):
+    if not video:
+        video = save_new_video().id
+    new_like = Like()
+    now = datetime.datetime.utcnow() if not date_created else date_created
+    new_like.video = str(video)
+    new_like.user = "testuser" if not user else user
+    new_like.date_created = now
+    new_like.save()
+    video = Video.objects(id=str(video)).first()
+    video.count_likes += 1
+    video.save()
+    return new_like
+
+
 def save_new_friendship(from_user=None, to_user=None, status="pending", date_created=None):
     from_user = from_user or "fromusertest_%s" % uuid.uuid4()
     to_user = to_user or "tousertest_%s" % uuid.uuid4()
@@ -99,9 +115,14 @@ def get_friendship(friendship_id):
     return Friendship.objects(id=friendship_id).first()
 
 
+def get_like(video_id, user_id):
+    return Friendship.objects(video=video_id, user=user_id).first()
+
+
 def delete_all():
     Comment.objects().delete()
     Friendship.objects().delete()
+    Like.objects().delete()
     Stat.objects().delete()
     Video.objects().delete()
 
