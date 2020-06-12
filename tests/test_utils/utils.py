@@ -1,14 +1,19 @@
 import datetime
 import uuid
+from bson import ObjectId
 from src.schemas.comment import CommentSchema
 from src.schemas.friendship import FriendshipSchema
 from src.schemas.stat import StatSchema
 from src.schemas.video import VideoSchema
 from src.models.comment import Comment
 from src.models.friendship import Friendship
-from src.models.like import Like
+from src.models.reaction import Like, Dislike, View
 from src.models.stat import Stat
 from src.models.video import Video
+
+
+def get_object_id():
+    return str(ObjectId())
 
 
 def save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.000438690185546875):
@@ -81,6 +86,36 @@ def save_new_video_like(video=None, user=None, date_created=None):
     video.count_likes += 1
     video.save()
     return new_like
+
+
+def save_new_video_dislike(video=None, user=None, date_created=None):
+    if not video:
+        video = save_new_video().id
+    new_dislike = Dislike()
+    now = datetime.datetime.utcnow() if not date_created else date_created
+    new_dislike.video = str(video)
+    new_dislike.user = "testuser" if not user else user
+    new_dislike.date_created = now
+    new_dislike.save()
+    video = Video.objects(id=str(video)).first()
+    video.count_dislikes += 1
+    video.save()
+    return new_dislike
+
+
+def save_new_video_view(video=None, user=None, date_created=None):
+    if not video:
+        video = save_new_video().id
+    new_view = View()
+    now = datetime.datetime.utcnow() if not date_created else date_created
+    new_view.video = str(video)
+    new_view.user = "testuser" if not user else user
+    new_view.date_created = now
+    new_view.save()
+    video = Video.objects(id=str(video)).first()
+    video.count_views += 1
+    video.save()
+    return new_view
 
 
 def save_new_friendship(from_user=None, to_user=None, status="pending", date_created=None):

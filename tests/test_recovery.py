@@ -54,6 +54,26 @@ class UsersTestCase(unittest.TestCase):
         r = self.app.post('/api/v1/recovery/testuser')
         self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)
 
+    @patch('src.clients.auth_api.AuthAPIClient.get_recovery')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_recovery_should_return_auth_api_response(self, mock_session, mock_get):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_get.return_value.json.return_value = dict(username="testuser")
+        mock_get.return_value.status_code = HTTPStatus.OK
+        r = self.app.get('/api/v1/recovery/testuser', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.OK, r.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_recoveries')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_recovery_should_return_auth_api_response(self, mock_session, mock_get):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_get.return_value.json.return_value = dict(username="testuser")
+        mock_get.return_value.status_code = HTTPStatus.OK
+        r = self.app.get('/api/v1/recovery', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.OK, r.status_code)
+
 
 if __name__ == '__main__':
     unittest.main()

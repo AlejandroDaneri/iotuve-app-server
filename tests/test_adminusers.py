@@ -33,9 +33,9 @@ class AdminusersTestCase(unittest.TestCase):
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_adminusers_should_return_auth_api_response(self, mock_delete, mock_session):
-        mock_delete.return_value.json.return_value = dict(message="ok")
-        mock_delete.return_value.status_code = HTTPStatus.OK
+    def test_get_adminusers_should_return_auth_api_response(self, mock_get, mock_session):
+        mock_get.return_value.json.return_value = dict(message="ok")
+        mock_get.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
@@ -46,9 +46,9 @@ class AdminusersTestCase(unittest.TestCase):
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_adminuser_should_return_auth_api_response(self, mock_delete, mock_session):
-        mock_delete.return_value.json.return_value = dict(message="ok")
-        mock_delete.return_value.status_code = HTTPStatus.OK
+    def test_get_adminuser_should_return_auth_api_response(self, mock_get, mock_session):
+        mock_get.return_value.json.return_value = dict(message="ok")
+        mock_get.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
@@ -59,9 +59,9 @@ class AdminusersTestCase(unittest.TestCase):
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.auth_api.requests.put')
-    def test_put_adminuser_should_return_auth_api_response(self, mock_patch, mock_session):
-        mock_patch.return_value.json.return_value = dict(message="ok")
-        mock_patch.return_value.status_code = HTTPStatus.OK
+    def test_put_adminuser_should_return_auth_api_response(self, mock_put, mock_session):
+        mock_put.return_value.json.return_value = dict(message="ok")
+        mock_put.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.put(

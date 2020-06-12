@@ -41,16 +41,6 @@ class VideoSchema(Schema):
 
 
 class VideoPaginatedSchema(PaginationSchema):
-
-    class Meta:
-        unknown = EXCLUDE
-
     id = fields.Str(required=False, validate=ObjectIdValidator(error="Is not a valid Video Id"))
     visibility = fields.Str(required=False, validate=validate.OneOf(["public", "private"]))
     user = fields.Str(required=False)
-
-    @post_load
-    def make_paginated(self, data, **kwargs):
-        limit = data.pop("limit")
-        offset = data.pop("offset")
-        return dict(filters=data, limit=limit, offset=offset)
