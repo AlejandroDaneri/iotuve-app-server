@@ -17,30 +17,11 @@ class Reactions(Resource):
     def remove_video_reaction(self, video):
         raise NotImplementedError()
 
-    @check_token
     def post(self, video_id):
-        if self.reaction.objects(video=video_id, user=g.session_username).first():
-            return response_error(HTTPStatus.BAD_REQUEST, self.message_reaction_already_exist)
-        video = Video.objects(id=video_id).first()
-        if video is None:
-            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
-        self.reaction(video=video_id, user=g.session_username, date_created=datetime.datetime.utcnow()).save()
-        self.add_video_reaction(video)
-        video.save()
-        return response_ok(HTTPStatus.CREATED, self.message_reaction_saved)
+        raise NotImplementedError()
 
-    @check_token
     def delete(self, video_id):
-        reaction = self.reaction.objects(video=video_id, user=g.session_username).first()
-        if reaction is None:
-            return response_error(HTTPStatus.NOT_FOUND, self.message_reaction_not_found)
-        video = Video.objects(id=video_id).first()
-        if video is None:
-            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
-        reaction.delete()
-        self.remove_video_reaction(video)
-        video.save()
-        return response_ok(HTTPStatus.OK, self.message_reaction_deleted)
+        raise NotImplementedError()
 
     @check_token
     def get(self, video_id):
@@ -50,7 +31,41 @@ class Reactions(Resource):
         return make_response(dict(data=ReactionSchema().dump(reactions, many=True)), HTTPStatus.OK)
 
 
-class Likes(Reactions):
+class LikeReactions(Reactions):
+
+    def add_video_reaction(self, video):
+        raise NotImplementedError()
+
+    def remove_video_reaction(self, video):
+        raise NotImplementedError()
+
+    @check_token
+    def post(self, video_id):
+        video = Video.objects(id=video_id).first()
+        if video is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
+        if self.reaction.objects(video=video_id, user=g.session_username).first():
+            return response_error(HTTPStatus.BAD_REQUEST, self.message_reaction_already_exist)
+        self.reaction(video=video_id, user=g.session_username, date_created=datetime.datetime.utcnow()).save()
+        self.add_video_reaction(video)
+        video.save()
+        return response_ok(HTTPStatus.CREATED, self.message_reaction_saved)
+
+    @check_token
+    def delete(self, video_id):
+        video = Video.objects(id=video_id).first()
+        if video is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
+        reaction = self.reaction.objects(video=video_id, user=g.session_username).first()
+        if reaction is None:
+            return response_error(HTTPStatus.NOT_FOUND, self.message_reaction_not_found)
+        reaction.delete()
+        self.remove_video_reaction(video)
+        video.save()
+        return response_ok(HTTPStatus.OK, self.message_reaction_deleted)
+
+
+class Likes(LikeReactions):
 
     reaction = Like
     message_reaction_already_exist = "Like already exists"
@@ -65,7 +80,7 @@ class Likes(Reactions):
         video.count_likes -= 1
 
 
-class Dislikes(Reactions):
+class Dislikes(LikeReactions):
 
     reaction = Dislike
     message_reaction_already_exist = "Dislike already exists"
@@ -83,9 +98,7 @@ class Dislikes(Reactions):
 class Views(Reactions):
 
     reaction = View
-    message_reaction_already_exist = "View already exists"
     message_reaction_saved = "View saved"
-    message_reaction_deleted = "View deleted"
     message_reaction_not_found = "View not found"
 
     def add_video_reaction(self, video):
@@ -93,3 +106,18 @@ class Views(Reactions):
 
     def remove_video_reaction(self, video):
         video.count_views -= 1
+
+    @check_token
+    def post(self, video_id):
+        video = Video.objects(id=video_id).first()
+        if video is None:
+            return response_error(HTTPStatus.NOT_FOUND, "Video not found")
+        if self.reaction.objects(video=video_id, user=g.session_username).first() is None:
+            self.reaction(video=video_id, user=g.session_username, date_created=datetime.datetime.utcnow()).save()
+        self.add_video_reaction(video)
+        video.save()
+        return response_ok(HTTPStatus.CREATED, self.message_reaction_saved)
+
+    @check_token
+    def delete(self, video_id):
+        return response_error(HTTPStatus.FORBIDDEN, "Cant remove a view")
