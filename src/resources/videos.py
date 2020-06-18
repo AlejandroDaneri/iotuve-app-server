@@ -7,6 +7,7 @@ from src.clients.media_api import MediaAPIClient
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
+from src.models.reaction import Like, Dislike, View
 from src.models.video import Video
 from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
 
@@ -25,6 +26,9 @@ class Videos(Resource):
         schema = VideoSchema()
         result = schema.dump(video)
         result["media"] = resp_media.json()
+        result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
+        result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
+        result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
         return make_response(result, HTTPStatus.OK)
 
     @check_token
@@ -52,6 +56,9 @@ class Videos(Resource):
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
         result = schema.dump(video)
         result["media"] = resp_media.json()
+        result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
+        result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
+        result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
         return make_response(result, HTTPStatus.OK)
 
     @check_token
@@ -86,6 +93,9 @@ class VideosList(Resource):
                 continue
             result = VideoSchema().dump(video)
             result["media"] = resp_media.json()
+            result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
+            result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
+            result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
             results.append(result)
         return make_response(dict(data=results), HTTPStatus.OK)
 
