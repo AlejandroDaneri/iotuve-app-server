@@ -37,3 +37,11 @@ class UsersList(Resource):
     def get(self):
         response = AuthAPIClient.get_users(request.data)
         return response.json(), response.status_code
+
+
+class UsersSessions(Resource):
+
+    @check_token
+    def get(self, username):
+        response = AuthAPIClient.get_user_sessions(username)
+        return response.json(), response.status_code

@@ -76,6 +76,11 @@ class AuthAPIClient:
                              json=data, headers=AuthAPIClient.__headers())
 
     @staticmethod
+    def get_user_sessions(username):
+        return requests.get("%s%s%s/sessions" % (conf.API_AUTH_CLIENT_URL, "users/", username),
+                            headers=AuthAPIClient.__headers())
+
+    @staticmethod
     def get_adminuser(username):
         return requests.get("%s%s%s" % (conf.API_AUTH_CLIENT_URL, "adminusers/", username),
                             headers=AuthAPIClient.__headers())
@@ -104,6 +109,11 @@ class AuthAPIClient:
     def post_adminuser(data):
         return requests.post("%s%s" % (conf.API_AUTH_CLIENT_URL, "adminusers"),
                              json=data, headers=AuthAPIClient.__headers())
+
+    @staticmethod
+    def get_adminuser_sessions(username):
+        return requests.get("%s%s%s/sessions" % (conf.API_AUTH_CLIENT_URL, "adminusers/", username),
+                            headers=AuthAPIClient.__headers())
 
     @staticmethod
     def post_recovery_reset(username, data):
