@@ -2,6 +2,7 @@ import datetime
 from http import HTTPStatus
 from flask import g, request, make_response
 from flask_restful import Resource
+from flask_mongoengine import ValidationError as MongoValidationError
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.models.reaction import Like, Dislike, View
@@ -41,7 +42,10 @@ class LikeReactions(Reactions):
 
     @check_token
     def post(self, video_id):
-        video = Video.objects(id=video_id).first()
+        try:
+            video = Video.objects(id=video_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if self.reaction.objects(video=video_id, user=g.session_username).first():
@@ -53,7 +57,10 @@ class LikeReactions(Reactions):
 
     @check_token
     def delete(self, video_id):
-        video = Video.objects(id=video_id).first()
+        try:
+            video = Video.objects(id=video_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         reaction = self.reaction.objects(video=video_id, user=g.session_username).first()
@@ -109,7 +116,10 @@ class Views(Reactions):
 
     @check_token
     def post(self, video_id):
-        video = Video.objects(id=video_id).first()
+        try:
+            video = Video.objects(id=video_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if self.reaction.objects(video=video_id, user=g.session_username).first() is None:
