@@ -42,6 +42,8 @@ class LikeReactions(Reactions):
 
     @check_token
     def post(self, video_id):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't react to videos")
         try:
             video = Video.objects(id=video_id).first()
         except MongoValidationError as err:
@@ -57,6 +59,8 @@ class LikeReactions(Reactions):
 
     @check_token
     def delete(self, video_id):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't delete video reaction")
         try:
             video = Video.objects(id=video_id).first()
         except MongoValidationError as err:
@@ -116,6 +120,8 @@ class Views(Reactions):
 
     @check_token
     def post(self, video_id):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't react to videos")
         try:
             video = Video.objects(id=video_id).first()
         except MongoValidationError as err:
