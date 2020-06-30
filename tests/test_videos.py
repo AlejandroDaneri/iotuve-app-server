@@ -238,6 +238,18 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_video_with_invalid_id_should_return_bad_request(self, mock_session, mock_media):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+
+        mock_media.return_value.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+
+        resp = self.app.get('/api/v1/videos/{}'.format(1), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+
+
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_media_server_error_on_get_video_should_return_server_error(self, mock_session, mock_media):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK

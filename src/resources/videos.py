@@ -2,7 +2,8 @@ import datetime
 from http import HTTPStatus
 from flask import make_response, request, g, current_app as app
 from flask_restful import Resource
-from marshmallow import ValidationError
+from flask_mongoengine import ValidationError as MongoValidationError
+from marshmallow import ValidationError as MarshmallowValidationError
 from src.clients.media_api import MediaAPIClient
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
@@ -15,7 +16,10 @@ from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
 class Videos(Resource):
     @check_token
     def get(self, video_id):
-        video = Video.objects(id=video_id).first()
+        try:
+            video = Video.objects(id=video_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         resp_media = MediaAPIClient.get_video(video.id)
@@ -33,7 +37,10 @@ class Videos(Resource):
 
     @check_token
     def put(self, video_id):
-        video = Video.objects(id=video_id).first()
+        try:
+            video = Video.objects(id=video_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if video.user != g.session_username:
@@ -41,8 +48,8 @@ class Videos(Resource):
         schema = VideoSchema()
         try:
             new_video = schema.load(request.get_json(force=True))
-        except ValidationError as e:
-            return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()))
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         video.title = new_video.title
         video.description = new_video.description
         video.location = new_video.location
@@ -63,7 +70,10 @@ class Videos(Resource):
 
     @check_token
     def delete(self, video_id):
-        video = Video.objects(id=video_id).first()
+        try:
+            video = Video.objects(id=video_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if video.user != g.session_username:
@@ -107,8 +117,8 @@ class VideosList(Resource):
             request_json = request.get_json(force=True)
             video = schema_video.load(request_json)
             media = schema_media.load(request_json.get("media", {}))
-        except ValidationError as e:
-            return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()))
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         now = datetime.datetime.utcnow()
         video.user = g.session_username
         video.date_created = now
