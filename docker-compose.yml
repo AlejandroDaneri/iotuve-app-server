@@ -11,6 +11,9 @@ services:
       #GUNICORN_LOG_LEVEL - The granularity of log output
       #A string of "debug", "info", "warning", "error", "critical"
       GUNICORN_LOG_LEVEL: "debug"
+      #Setear la cantidad de workers a utilizar por Gunicorn
+      #https://devcenter.heroku.com/articles/python-gunicorn
+      GUNICORN_WORKERS: 4
       #Setear en True or False, solo aplica para correr desde Python (o sea nunca)
       APP_DEBUG: "True"
       APP_PORT: 8000
