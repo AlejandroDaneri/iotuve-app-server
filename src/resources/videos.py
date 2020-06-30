@@ -37,6 +37,8 @@ class Videos(Resource):
 
     @check_token
     def put(self, video_id):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't update videos")
         try:
             video = Video.objects(id=video_id).first()
         except MongoValidationError as err:
@@ -76,8 +78,8 @@ class Videos(Resource):
             return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
-        if video.user != g.session_username:
-            return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
+        if video.user != g.session_username and not g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Forbidden")
         resp_media = MediaAPIClient.delete_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error deleting media from media-server: %s" %
@@ -111,6 +113,8 @@ class VideosList(Resource):
 
     @check_token
     def post(self):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't post videos")
         schema_video = VideoSchema()
         schema_media = MediaSchema()
         try:

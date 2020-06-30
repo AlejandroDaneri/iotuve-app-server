@@ -65,6 +65,33 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.post_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_post_new_video_with_admin_user_should_return_forbidden(self, mock_session, mock_media):
+        post_json = {
+            'title': 'Un titulo',
+            'description': 'Una descripcion',
+            'visibility': 'public',
+            'media': {
+                'name': 'mediafile',
+                'date_created': '2020-05-30T02:36:53.074000',
+                'size': 3215421,
+                'type': 'video/mp4'
+            },
+            'location': {
+                'latitude': 1212121.232323,
+                'longitude': 1212121.232323
+            }
+        }
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+
+        mock_media.side_effect = Exception("should not call media api")
+
+        resp = self.app.post('/api/v1/videos',
+                             headers={'X-Auth-Token': '123456', 'X-Admin': 'true'}, json=post_json)
+        self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
+
+    @patch('src.clients.media_api.MediaAPIClient.post_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_media_server_error_on_post_video_should_return_server_error(self, mock_session, mock_media):
         post_json = {
             "title": "Un titulo",
@@ -219,6 +246,29 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_put_video_with_admin_user_should_return_forbidden(self, mock_session, mock_media):
+        mock_media.side_effect = Exception("should not call media api")
+        mock_session.return_value.json.return_value = dict(username="othertestuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        video = utils.save_new_video()
+        put_json = {
+            "title": "Otro titulo",
+            "description": "Una descripcion",
+            "visibility": "public",
+            "media": {
+                "name": "mediafile"
+            },
+            "location": {
+                "latitude": 1212121.232323,
+                "longitude": 1212121.232323
+            }
+        }
+        resp = self.app.put('/api/v1/videos/{}'.format(video.id),
+                            headers={'X-Auth-Token': '123456', 'X-Admin': 'true'}, json=put_json)
+        self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
+
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_video_should_return_ok(self, mock_session, mock_media):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -291,7 +341,7 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.delete_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_delete_video_not_owner_should_return_forbidden(self, mock_session, mock_media):
+    def test_delete_video_with_not_owner_should_return_forbidden(self, mock_session, mock_media):
         mock_media.side_effect = Exception("should not call media api")
         mock_session.return_value.json.return_value = dict(username="otheruser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -300,6 +350,20 @@ class VideosTestCase(unittest.TestCase):
         resp = self.app.delete('/api/v1/videos/{}'.format(video.id), headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
         self.assertIsNotNone(utils.get_video(video.id))
+
+    @patch('src.clients.media_api.MediaAPIClient.delete_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_video_with_admin_user_should_return_ok(self, mock_session, mock_media):
+        mock_media.return_value.status_code = HTTPStatus.OK
+        mock_session.return_value.json.return_value = dict(username="admintestuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        video = utils.save_new_video()
+        self.assertIsNotNone(utils.get_video(video.id))
+        resp = self.app.delete('/api/v1/videos/{}'.format(video.id),
+                               headers={'X-Auth-Token': '123456', 'X-Admin': 'true'})
+        self.assertEqual(HTTPStatus.OK, resp.status_code)
+        self.assertEqual("Video deleted", resp.json["message"])
+        self.assertIsNone(utils.get_video(video.id))
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
