@@ -26,7 +26,7 @@ def init_routes(api):
 
     api.add_resource(AdminUsers, "/adminusers/<string:username>")
     api.add_resource(AdminUsersList, "/adminusers")
-    api.add_resource(AdminUsersSessions, "/users/<string:username>/sessions")
+    api.add_resource(AdminUsersSessions, "/adminusers/<string:username>/sessions")
 
     api.add_resource(Recovery, "/recovery/<string:username>")
     api.add_resource(RecoveryList, "/recovery")
