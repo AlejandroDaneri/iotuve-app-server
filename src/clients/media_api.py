@@ -28,13 +28,18 @@ class MediaAPIClient:
 
     @staticmethod
     def get_picture(picture_id):
-        return requests.get("%s%s%s" % (conf.API_MEDIA_CLIENT_URL, "pictures", picture_id),
+        return requests.get("%s%s%s" % (conf.API_MEDIA_CLIENT_URL, "pictures/", picture_id),
                             headers=MediaAPIClient.__headers())
 
     @staticmethod
     def post_picture(data):
         return requests.post("%s%s" % (conf.API_MEDIA_CLIENT_URL, "pictures"),
                              json=data, headers=MediaAPIClient.__headers())
+
+    @staticmethod
+    def patch_picture(picture_id, data):
+        return requests.patch("%s%s%s" % (conf.API_MEDIA_CLIENT_URL, "pictures/", picture_id),
+                              json=data, headers=MediaAPIClient.__headers())
 
     @staticmethod
     def delete_picture(picture_id):

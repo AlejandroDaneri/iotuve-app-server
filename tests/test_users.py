@@ -32,30 +32,38 @@ class UsersTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_users_should_return_auth_api_response(self, mock_get, mock_session):
-        mock_get.return_value.json.return_value = dict(message="ok")
+    def test_get_users_should_return_auth_api_response_status(self, mock_get, mock_picture, mock_session):
+        mock_get.return_value.json.return_value = [dict(username="testuser")]
         mock_get.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
             '/api/v1/users',
             headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.OK, r.status_code)
-        self.assertEqual("ok", r.json["message"])
+        self.assertEqual("testuser", r.json[0]['username'])
+        self.assertEqual("testuser", r.json[0]["avatar"]["user_id"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_user_should_return_auth_api_response(self, mock_get, mock_session):
-        mock_get.return_value.json.return_value = dict(message="ok")
+    def test_get_user_should_return_auth_api_response(self, mock_get, mock_picture, mock_session):
+        mock_get.return_value.json.return_value = dict(username="testuser")
         mock_get.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
             '/api/v1/users/testuser',
             headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.OK, r.status_code)
-        self.assertEqual("ok", r.json["message"])
+        self.assertEqual("testuser", r.json["username"])
+        self.assertEqual("testuser", r.json["avatar"]["user_id"])
 
     @patch('src.clients.auth_api.requests.post')
     def test_post_user_should_return_auth_api_response(self, mock_post):
@@ -74,10 +82,13 @@ class UsersTestCase(unittest.TestCase):
         self.assertEqual("testuser", r.json["username"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.patch')
-    def test_patch_user_should_return_auth_api_response(self, mock_patch, mock_session):
-        mock_patch.return_value.json.return_value = dict(message="ok")
+    def test_patch_user_should_return_auth_api_response(self, mock_patch, mock_picture, mock_session):
+        mock_patch.return_value.json.return_value = dict(username="testuser")
         mock_patch.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.patch(
@@ -85,13 +96,17 @@ class UsersTestCase(unittest.TestCase):
             headers={'X-Auth-Token': '123456'},
             json=dict(op="replace", path="password", value="newpassword"))
         self.assertEqual(HTTPStatus.OK, r.status_code)
-        self.assertEqual("ok", r.json["message"])
+        self.assertEqual("testuser", r.json["username"])
+        self.assertEqual("testuser", r.json["avatar"]["user_id"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.put')
-    def test_put_user_should_return_auth_api_response(self, mock_put, mock_session):
-        mock_put.return_value.json.return_value = dict(message="ok")
+    def test_put_user_should_return_auth_api_response(self, mock_put, mock_picture, mock_session):
+        mock_put.return_value.json.return_value = dict(username="testuser")
         mock_put.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.put(
@@ -99,11 +114,15 @@ class UsersTestCase(unittest.TestCase):
             headers={'X-Auth-Token': '123456'},
             json=dict(first_name="test"))
         self.assertEqual(HTTPStatus.OK, r.status_code)
-        self.assertEqual("ok", r.json["message"])
+        self.assertEqual("testuser", r.json["username"])
+        self.assertEqual("testuser", r.json["avatar"]["user_id"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    @patch('src.clients.media_api.MediaAPIClient.delete_picture')
     @patch('src.clients.auth_api.requests.delete')
-    def test_delete_user_should_return_auth_api_response(self, mock_delete, mock_session):
+    def test_delete_user_should_return_auth_api_response(self, mock_delete, mock_picture, mock_session):
+        mock_picture.return_value.json.return_value = dict(message="ok")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_delete.return_value.json.return_value = dict(message="ok")
         mock_delete.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
