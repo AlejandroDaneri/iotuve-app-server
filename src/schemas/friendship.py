@@ -22,16 +22,6 @@ class FriendshipSchema(Schema):
 
 
 class FriendshipPaginatedSchema(PaginationSchema):
-
-    class Meta:
-        unknown = EXCLUDE
-
     from_user = fields.Str(required=False)
     to_user = fields.Str(required=False)
     status = fields.Str(required=False)
-
-    @post_load
-    def make_paginated(self, data, **kwargs):
-        limit = data.pop("limit")
-        offset = data.pop("offset")
-        return dict(filters=data, limit=limit, offset=offset)

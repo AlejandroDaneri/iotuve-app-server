@@ -1,4 +1,4 @@
-import multiprocessing
+import os, multiprocessing
 from src.conf import APP_HOST, APP_PORT, LOG_LEVEL
 
 # Chotuve - Gunicorn configuration file.
@@ -64,7 +64,7 @@ backlog = 2048
 #
 #       A positive integer. Generally set in the 1-5 seconds range.
 #
-workers = 1 + (multiprocessing.cpu_count() * 2)
+workers = os.environ.get("GUNICORN_WORKERS", (1 + (multiprocessing.cpu_count() * 2)))
 threads = workers
 worker_class = 'gthread'
 worker_connections = 1000

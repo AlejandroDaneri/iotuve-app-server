@@ -2,7 +2,8 @@ import datetime
 from http import HTTPStatus
 from flask import make_response, request, g
 from flask_restful import Resource
-from marshmallow import ValidationError
+from flask_mongoengine import ValidationError as MongoValidationError
+from marshmallow import ValidationError as MarshmallowValidationError
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
@@ -13,15 +14,20 @@ from src.schemas.comment import CommentSchema, CommentPaginatedSchema
 class Comments(Resource):
     @check_token
     def get(self, comment_id):
-        schema = CommentSchema()
-        comment = Comment.objects(id=comment_id).first()
+        try:
+            comment = Comment.objects(id=comment_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if comment is None:
             return response_error(HTTPStatus.NOT_FOUND, "Comment not found")
-        return make_response(schema.dump(comment), HTTPStatus.OK)
+        return make_response(CommentSchema().dump(comment), HTTPStatus.OK)
 
     @check_token
     def delete(self, comment_id):
-        comment = Comment.objects(id=comment_id).first()
+        try:
+            comment = Comment.objects(id=comment_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if comment is None:
             return response_error(HTTPStatus.NOT_FOUND, "Comment not found")
         if comment.user != g.session_username:
@@ -44,8 +50,8 @@ class CommentsList(Resource):
         schema = CommentSchema()
         try:
             comment = schema.load(request.get_json(force=True))
-        except ValidationError as e:
-            return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()))
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         if Video.objects(id=comment.video.id).first() is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if comment.parent and Comment.objects(id=comment.parent.id, video=comment.video.id).first() is None:

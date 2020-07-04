@@ -1,8 +1,9 @@
 import datetime
 from http import HTTPStatus
-from marshmallow import ValidationError
 from flask_restful import Resource
 from flask import make_response, request, g, current_app as app
+from flask_mongoengine import ValidationError as MongoValidationError
+from marshmallow import ValidationError as MarshmallowValidationError
 from mongoengine.queryset.visitor import Q
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
@@ -15,7 +16,10 @@ class Friendships(Resource):
 
     @check_token
     def put(self, friendship_id):
-        friendship = Friendship.objects(id=friendship_id).first()
+        try:
+            friendship = Friendship.objects(id=friendship_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
 
         if friendship is None:
             return response_error(HTTPStatus.NOT_FOUND, "Friendship not found")
@@ -26,8 +30,8 @@ class Friendships(Resource):
         schema = FriendshipSchema(only=("status",))
         try:
             status = schema.load(request.get_json(force=True)).status
-        except ValidationError as e:
-            return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()), code=-1)
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()), code=-1)
 
         if friendship.status == "pending" and friendship.status != status:
             now = datetime.datetime.utcnow()
@@ -39,7 +43,10 @@ class Friendships(Resource):
 
     @check_token
     def delete(self, friendship_id):
-        friendship = Friendship.objects(id=friendship_id).first()
+        try:
+            friendship = Friendship.objects(id=friendship_id).first()
+        except MongoValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if friendship is None:
             return response_error(HTTPStatus.NOT_FOUND, "Friendship not found")
         if g.session_username not in (friendship.from_user, friendship.to_user):
@@ -62,7 +69,7 @@ class FriendshipsList(Resource):
         schema = FriendshipSchema()
         try:
             friendship = schema.load(request.get_json(force=True))
-        except ValidationError as e:
+        except MarshmallowValidationError as e:
             return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()), code=-1)
 
         friendship.from_user = g.session_username
