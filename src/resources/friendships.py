@@ -66,6 +66,9 @@ class FriendshipsList(Resource):
 
     @check_token
     def post(self):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't request friendship")
+
         schema = FriendshipSchema()
         try:
             friendship = schema.load(request.get_json(force=True))

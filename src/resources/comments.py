@@ -30,7 +30,7 @@ class Comments(Resource):
             return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if comment is None:
             return response_error(HTTPStatus.NOT_FOUND, "Comment not found")
-        if comment.user != g.session_username:
+        if comment.user != g.session_username and not g.session_admin:
             return response_error(HTTPStatus.FORBIDDEN, str("Forbidden"))
         comment.delete()
         Comment.objects(parent=comment_id).delete()
@@ -47,6 +47,8 @@ class CommentsList(Resource):
 
     @check_token
     def post(self):
+        if g.session_admin:
+            return response_error(HTTPStatus.FORBIDDEN, "Admin users can't post comments")
         schema = CommentSchema()
         try:
             comment = schema.load(request.get_json(force=True))
