@@ -4,7 +4,7 @@ from src.resources.friendships import Friendships, FriendshipsList, FriendsByUse
 from src.resources.reactions import Likes, Dislikes, Views
 from src.resources.recovery import Recovery, RecoveryList
 from src.resources.status import Home, Ping, Stats, Status
-from src.resources.sessions import Sessions
+from src.resources.sessions import Sessions, SessionsOwner
 from src.resources.users import Users, UsersList, UsersSessions, UsersAvatars
 from src.resources.videos import Videos, VideosList
 from src.conf import APP_PREFIX
@@ -18,7 +18,8 @@ def init_routes(api):
 
     api.prefix = APP_PREFIX
 
-    api.add_resource(Sessions, "/sessions")
+    api.add_resource(Sessions, "/sessions/<string:session>")
+    api.add_resource(SessionsOwner, "/sessions")
 
     api.add_resource(Users, "/users/<string:username>")
     api.add_resource(UsersList, "/users")
