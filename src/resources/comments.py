@@ -42,7 +42,7 @@ class CommentsList(Resource):
     def get(self):
         schema = CommentPaginatedSchema()
         paginated = schema.load(request.args)
-        comment = Comment.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+        comment = Comment.objects(**paginated["filters"]).order_by('-date_updated').skip(paginated["offset"]).limit(paginated["limit"])
         return make_response(dict(data=CommentSchema().dump(comment, many=True)), HTTPStatus.OK)
 
     @check_token
