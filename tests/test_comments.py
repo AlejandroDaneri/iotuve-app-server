@@ -219,3 +219,16 @@ class CommentsTestCase(unittest.TestCase):
                          query_string=dict(video=video.id, offset=0, limit=10))
         self.assertEqual(HTTPStatus.OK, r.status_code)
         self.assertEqual(10, len(r.json["data"]))
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_comments_paginated_error(self, mock_session):
+        video = utils.save_new_video()
+        for _ in range(1, 25):
+            utils.save_new_comment(video.id)
+
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        r = self.app.get('/api/v1/comments',
+                         headers={'X-Auth-Token': '123456'},
+                         query_string=dict(video=video.id, offset=0, limit=1))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)

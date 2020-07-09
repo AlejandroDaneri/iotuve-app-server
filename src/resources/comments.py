@@ -41,7 +41,10 @@ class CommentsList(Resource):
     @check_token
     def get(self):
         schema = CommentPaginatedSchema()
-        paginated = schema.load(request.args)
+        try:
+            paginated = schema.load(request.args)
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         comment = Comment.objects(**paginated["filters"]).order_by('-date_updated').skip(paginated["offset"]).limit(paginated["limit"])
         return make_response(dict(data=CommentSchema().dump(comment, many=True)), HTTPStatus.OK)
 
