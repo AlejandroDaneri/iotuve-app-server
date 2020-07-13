@@ -16,7 +16,7 @@ def marshal_user(username, data):
     else:
         app.logger.error("[avatar:%s] Error getting avatar from media-server: %s" %
                          (username, resp_media.text))
-    data['statistics'] = dict(likes=0, dislikes=0, views=0, uploaded=0)
+    data['statistics'] = dict(likes=0, dislikes=0, views=0, uploaded=0, friends=0)
 
 
 class Users(Resource):
