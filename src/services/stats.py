@@ -137,7 +137,7 @@ class StatisticsService:
     def top_writer_users():
         pipeline = [
             {"$group": {"_id": "$user", "count": {"$sum": 1}}},
-            {{"$sort": {"count": -1}}},
+            {"$sort": {"count": -1}},
             {"$limit": 10}
         ]
         result = {}
