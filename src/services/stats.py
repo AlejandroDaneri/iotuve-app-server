@@ -111,6 +111,8 @@ class StatisticsService:
     #         result[str(req["_id"]["user"])] = req["count"]
     #     return result
 
+
+    # TypeError: string indices must be integers
     @staticmethod
     def min_max_avg_comments():
         pipeline = [
@@ -133,6 +135,9 @@ class StatisticsService:
             result[str(req["_id"]["video"])] = [req["min"], req["max"], req["avg"]]
         return result
 
+    # result[str(req["_id"]["user"])] = req["count"]
+    # TypeError: string indices must be integers
+
     @staticmethod
     def top_writer_users():
         pipeline = [
@@ -145,6 +150,7 @@ class StatisticsService:
             result[str(req["_id"]["user"])] = req["count"]
         return result
 
+    # seguro tira el mismo error que el de arriba
     @staticmethod
     def count_visibility():
         pipeline = [
@@ -155,29 +161,32 @@ class StatisticsService:
             result[str(req["_id"]["visibility"])] = req["count"]
         return result
 
-    # @staticmethod
     # TODO: falta Model Like
-    # def top_liker():
-    #     pipeline = [
-    #         {"$group": {"_id": "$user", "count": {"$sum": 1}}},
-    #         {{"$sort": {"count": -1}}},
-    #         {"$limit": 10}
-    #     ]
-    #     result = {}
-    #     for req in Like.objects().aggregate(pipeline):
-    #         result[str(req["_id"]["visibility"])] = req["count"]
-    #     return result
-    #
-    # @staticmethod
+    @staticmethod
+    def top_liker():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {{"$sort": {"count": -1}}},
+            {"$limit": 10}
+        ]
+        result = {}
+        for req in Like.objects().aggregate(pipeline):
+            result[str(req["_id"]["visibility"])] = req["count"]
+        return result
+
     # TODO: falta Model Dislike
-    # def top_disliker():
-    #     pipeline = [
-    #         {"$group": {"_id": "$user", "count": {"$sum": 1}}},
-    #         {{"$sort": {"count": -1}}},
-    #         {"$limit": 10}
-    #     ]
-    #     result = {}
-    #     for req in Dislike.objects().aggregate(pipeline):
-    #         result[str(req["_id"]["visibility"])] = req["count"]
-    #     return result
+    @staticmethod
+    def top_disliker():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {{"$sort": {"count": -1}}},
+            {"$limit": 10}
+        ]
+        result = {}
+        for req in Dislike.objects().aggregate(pipeline):
+            result[str(req["_id"]["visibility"])] = req["count"]
+        return result
+
+
+
 
