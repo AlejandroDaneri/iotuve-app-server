@@ -33,7 +33,7 @@ class Statss(Resource):
             "most_viewed": StatisticsService.top_most_viewed_videos(),
             "approved_friends": StatisticsService.count_approved_friendships(),
             "pending_friends": StatisticsService.count_pending_friendships(),
-            "min_max_comm": StatisticsService.min_max_avg_comments(),
+            # "min_max_comm": StatisticsService.min_max_avg_comments(),
             "top_likes": StatisticsService.top_likes()
         }
         return make_response(response, HTTPStatus.OK)
