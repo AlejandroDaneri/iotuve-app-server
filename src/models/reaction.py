@@ -9,12 +9,18 @@ class Reaction:
 
 
 class Like(Reaction, db.Document):
-    pass
+    video = db.LazyReferenceField(Video)
+    user = db.StringField(required=True)
+    date_created = db.ComplexDateTimeField(required=True)
 
 
 class Dislike(Reaction, db.Document):
-    pass
+    video = db.LazyReferenceField(Video)
+    user = db.StringField(required=True)
+    date_created = db.ComplexDateTimeField(required=True)
 
 
 class View(Reaction, db.Document):
-    pass
+    video = db.LazyReferenceField(Video)
+    user = db.StringField(required=True)
+    date_created = db.ComplexDateTimeField(required=True)

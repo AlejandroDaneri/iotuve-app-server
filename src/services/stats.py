@@ -98,21 +98,16 @@ class StatisticsService:
     def count_pending_friendships():
         return Friendship.objects(status__exact="pending").count()
 
-    # @staticmethod
-    # TODO: falta Model View
-    # def top_active_users():
-    #     pipeline = [
-    #         {"$group": {"_id": "$user", "count": {"$sum": 1}}},
-    #         {{"$sort": {"count": -1}}},
-    #         {"$limit": 10}
-    #     ]
-    #     result = {}
-    #     for req in View.objects().aggregate(pipeline):
-    #         result[str(req["_id"]["user"])] = req["count"]
-    #     return result
+    @staticmethod
+    def top_active_users():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        return [doc for doc in View.objects().aggregate(pipeline)]
 
 
-    # TypeError: string indices must be integers
     @staticmethod
     def min_max_avg_comments():
         pipeline = [
@@ -129,14 +124,7 @@ class StatisticsService:
             }}
 
         ]
-        result = {}
-        # TODO: deberia ser solo uno
-        for req in Comment.objects().aggregate(pipeline):
-            result[str(req["_id"]["video"])] = [req["min"], req["max"], req["avg"]]
-        return result
-
-    # result[str(req["_id"]["user"])] = req["count"]
-    # TypeError: string indices must be integers
+        return [doc for doc in Comment.objects().aggregate(pipeline)]
 
     @staticmethod
     def top_writer_users():
@@ -154,31 +142,23 @@ class StatisticsService:
         ]
         return [doc for doc in Comment.objects().aggregate(pipeline)]
 
-    # TODO: falta Model Like
     @staticmethod
     def top_liker():
         pipeline = [
             {"$group": {"_id": "$user", "count": {"$sum": 1}}},
-            {{"$sort": {"count": -1}}},
+            {"$sort": {"count": -1}},
             {"$limit": 10}
         ]
-        result = {}
-        for req in Like.objects().aggregate(pipeline):
-            result[str(req["_id"]["visibility"])] = req["count"]
-        return result
+        return [doc for doc in Like.objects().aggregate(pipeline)]
 
-    # TODO: falta Model Dislike
     @staticmethod
     def top_disliker():
         pipeline = [
             {"$group": {"_id": "$user", "count": {"$sum": 1}}},
-            {{"$sort": {"count": -1}}},
+            {"$sort": {"count": -1}},
             {"$limit": 10}
         ]
-        result = {}
-        for req in Dislike.objects().aggregate(pipeline):
-            result[str(req["_id"]["visibility"])] = req["count"]
-        return result
+        return [doc for doc in Dislike.objects().aggregate(pipeline)]
 
 
 

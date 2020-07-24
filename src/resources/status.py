@@ -39,9 +39,9 @@ class Statss(Resource):
             "top_writer_users": StatisticsService.top_writer_users(),
             "visibility": StatisticsService.count_visibility(),
             # "min_max_comm": StatisticsService.min_max_avg_comments(),
-            # "top_active_users": StatisticsService.top_active_users(),
-            # "top_liker": StatisticsService.top_liker(),
-            # "top_disliker": StatisticsService.top_disliker()
+            "top_active_users": StatisticsService.top_active_users(),
+            "top_liker": StatisticsService.top_liker(),
+            "top_disliker": StatisticsService.top_disliker()
         }
         return make_response(response, HTTPStatus.OK)
 
