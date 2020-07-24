@@ -156,10 +156,7 @@ class StatisticsService:
         pipeline = [
             {"$group": {"_id": "$visibility", "count": {"$sum": 1}}},
         ]
-        result = {}
-        for req in Comment.objects().aggregate(pipeline):
-            result[str(req["_id"]["visibility"])] = req["count"]
-        return result
+        return [doc for doc in Comment.objects().aggregate(pipeline)]
 
     # TODO: falta Model Like
     @staticmethod

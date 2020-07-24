@@ -37,7 +37,7 @@ class Statss(Resource):
             "top_likes": StatisticsService.top_likes(),
 
             # "top_writer_users": StatisticsService.top_writer_users(),
-            # "visibility": StatisticsService.count_visibility(),
+            "visibility": StatisticsService.count_visibility(),
             # "min_max_comm": StatisticsService.min_max_avg_comments(),
             # "top_active_users": StatisticsService.top_active_users(),
             # "top_liker": StatisticsService.top_liker(),
