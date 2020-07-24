@@ -3,6 +3,7 @@ from src.models.comment import Comment
 from src.models.friendship import Friendship
 from src.models.stat import Stat
 from src.models.video import Video
+from src.models.reaction import Like, Dislike, View
 
 
 class StatisticsService:
@@ -97,7 +98,6 @@ class StatisticsService:
     def count_pending_friendships():
         return Friendship.objects(status__exact="pending").count()
 
-
     # @staticmethod
     # TODO: falta Model View
     # def top_active_users():
@@ -120,7 +120,7 @@ class StatisticsService:
                 "content_len": {"$strLenCP": "$content"}
             }},
             {"$group": {
-                "_id": "null", #TODO: revisar si es con null
+                "_id": "null",  # TODO: revisar si es con null
                 "max": {"$max": "$content_len"},
                 "min": {"$min": "$content_len"},
                 "avg": {"$avg": "$content_len"}
@@ -128,7 +128,56 @@ class StatisticsService:
 
         ]
         result = {}
-        #TODO: deberia ser solo uno
+        # TODO: deberia ser solo uno
         for req in Comment.objects().aggregate(pipeline):
             result[str(req["_id"]["video"])] = [req["min"], req["max"], req["avg"]]
         return result
+
+    @staticmethod
+    def top_writer_users():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {{"$sort": {"count": -1}}},
+            {"$limit": 10}
+        ]
+        result = {}
+        for req in Comment.objects().aggregate(pipeline):
+            result[str(req["_id"]["user"])] = req["count"]
+        return result
+
+    @staticmethod
+    def count_visibility():
+        pipeline = [
+            {"$group": {"_id": "$visibility", "count": {"$sum": 1}}},
+        ]
+        result = {}
+        for req in Comment.objects().aggregate(pipeline):
+            result[str(req["_id"]["visibility"])] = req["count"]
+        return result
+
+    # @staticmethod
+    # TODO: falta Model Like
+    # def top_liker():
+    #     pipeline = [
+    #         {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+    #         {{"$sort": {"count": -1}}},
+    #         {"$limit": 10}
+    #     ]
+    #     result = {}
+    #     for req in Like.objects().aggregate(pipeline):
+    #         result[str(req["_id"]["visibility"])] = req["count"]
+    #     return result
+    #
+    # @staticmethod
+    # TODO: falta Model Dislike
+    # def top_disliker():
+    #     pipeline = [
+    #         {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+    #         {{"$sort": {"count": -1}}},
+    #         {"$limit": 10}
+    #     ]
+    #     result = {}
+    #     for req in Dislike.objects().aggregate(pipeline):
+    #         result[str(req["_id"]["visibility"])] = req["count"]
+    #     return result
+
