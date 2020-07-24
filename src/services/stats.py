@@ -140,7 +140,7 @@ class StatisticsService:
         pipeline = [
             {"$group": {"_id": "$visibility", "count": {"$sum": 1}}},
         ]
-        return [doc for doc in Comment.objects().aggregate(pipeline)]
+        return [doc for doc in Video.objects().aggregate(pipeline)]
 
     @staticmethod
     def top_liker():
