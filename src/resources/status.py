@@ -5,6 +5,7 @@ from flask_restful import Resource
 from src.conf import APP_NAME
 from src.models.stat import Stat
 from src.schemas.stat import StatSchema, StatPaginatedSchema
+from src.services.stats import StatisticsService
 
 
 class Home(Resource):
@@ -20,10 +21,21 @@ class Ping(Resource):
 
 class Stats(Resource):
     def get(self):
-        schema = StatPaginatedSchema()
-        paginated = schema.load(request.args)
-        stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
-        return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
+        response = {
+            "top_dislikes": StatisticsService.top_dislikes(),
+            "most_viewed": StatisticsService.top_most_viewed_videos(),
+            "approved_friends": StatisticsService.count_approved_friendships(),
+            "pending_friends": StatisticsService.count_pending_friendships(),
+            "min_max_comm": StatisticsService.min_max_avg_comments(),
+            "top_likes": StatisticsService.top_likes()
+        }
+        return make_response(response, HTTPStatus.OK)
+
+    # def get(self):
+    #     schema = StatPaginatedSchema()
+    #     paginated = schema.load(request.args)
+    #     stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+    #     return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
 
 
 class Status(Resource):

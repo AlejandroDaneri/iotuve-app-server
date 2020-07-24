@@ -19,7 +19,7 @@ class StatisticsService:
                     '$dateToString': {
                         'date': '$timestamp',
                         'format': '%Y-%m-%d %H:%M'
-            }}}},
+                    }}}},
             {"$group": {
                 "_id": '$datetime',
                 "count": {
@@ -76,3 +76,59 @@ class StatisticsService:
     @staticmethod
     def count_friendships(date_from, date_to):
         return Friendship.objects(date_created__gte=date_from, date_created__lte=date_to).count()
+
+    @staticmethod
+    def top_likes():
+        return Video.objects().order_by('count_likes').limit(10)
+
+    @staticmethod
+    def top_dislikes():
+        return Video.objects().order_by('count_dislikes').limit(10)
+
+    @staticmethod
+    def top_most_viewed_videos():
+        return Video.objects().order_by('count_views').limit(10)
+
+    @staticmethod
+    def count_approved_friendships():
+        return Friendship.objects(status__exact="approved").count()
+
+    @staticmethod
+    def count_pending_friendships():
+        return Friendship.objects(status__exact="pending").count()
+
+
+    # @staticmethod
+    # TODO: falta Model View
+    # def top_active_users():
+    #     pipeline = [
+    #         {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+    #         {{"$sort": {"count": -1}}},
+    #         {"$limit": 10}
+    #     ]
+    #     result = {}
+    #     for req in View.objects().aggregate(pipeline):
+    #         result[str(req["_id"]["user"])] = req["count"]
+    #     return result
+
+    @staticmethod
+    def min_max_avg_comments():
+        pipeline = [
+            {"$project": {
+                "user": 1,
+                "content": 1,
+                "content_len": {"$strLenCP": "$content"}
+            }},
+            {"$group": {
+                "_id": "null", #TODO: revisar si es con null
+                "max": {"$max": "$content_len"},
+                "min": {"$min": "$content_len"},
+                "avg": {"$avg": "$content_len"}
+            }}
+
+        ]
+        result = {}
+        #TODO: deberia ser solo uno
+        for req in Comment.objects().aggregate(pipeline):
+            result[str(req["_id"]["video"])] = [req["min"], req["max"], req["avg"]]
+        return result
