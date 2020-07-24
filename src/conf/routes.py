@@ -3,7 +3,7 @@ from src.resources.comments import Comments, CommentsList
 from src.resources.friendships import Friendships, FriendshipsList, FriendsByUser
 from src.resources.reactions import Likes, Dislikes, Views
 from src.resources.recovery import Recovery, RecoveryList
-from src.resources.status import Home, Ping, Stats, Status
+from src.resources.status import Home, Ping, Stats, Status, Statss
 from src.resources.sessions import Sessions, SessionsOwner
 from src.resources.users import Users, UsersList, UsersSessions, UsersAvatars
 from src.resources.videos import Videos, VideosList
@@ -14,6 +14,10 @@ def init_routes(api):
     api.add_resource(Home, "/", APP_PREFIX + "/")
     api.add_resource(Ping, "/ping", APP_PREFIX + "/ping")
     api.add_resource(Stats, "/stats", APP_PREFIX + "/stats")
+
+    #testing stats route
+    api.add_resource(Statss, "/statss", APP_PREFIX + "/statss")
+
     api.add_resource(Status, "/status", APP_PREFIX + "/status")
 
     api.prefix = APP_PREFIX

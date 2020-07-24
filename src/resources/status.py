@@ -21,6 +21,13 @@ class Ping(Resource):
 
 class Stats(Resource):
     def get(self):
+        schema = StatPaginatedSchema()
+        paginated = schema.load(request.args)
+        stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+        return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
+
+class Statss(Resource):
+    def get(self):
         response = {
             "top_dislikes": StatisticsService.top_dislikes(),
             "most_viewed": StatisticsService.top_most_viewed_videos(),
@@ -30,13 +37,6 @@ class Stats(Resource):
             "top_likes": StatisticsService.top_likes()
         }
         return make_response(response, HTTPStatus.OK)
-
-    # def get(self):
-    #     schema = StatPaginatedSchema()
-    #     paginated = schema.load(request.args)
-    #     stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
-    #     return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
-
 
 class Status(Resource):
     def get(self):
