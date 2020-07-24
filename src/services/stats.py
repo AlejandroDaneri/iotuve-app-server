@@ -145,12 +145,8 @@ class StatisticsService:
             {"$sort": {"count": -1}},
             {"$limit": 10}
         ]
-        result = {}
-        for req in Comment.objects().aggregate(pipeline):
-            result[str(req["_id"]["user"])] = req["count"]
-        return result
+        return [doc for doc in Comment.objects().aggregate(pipeline)]
 
-    # seguro tira el mismo error que el de arriba
     @staticmethod
     def count_visibility():
         pipeline = [

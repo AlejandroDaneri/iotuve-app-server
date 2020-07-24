@@ -36,7 +36,7 @@ class Statss(Resource):
             "pending_friends": StatisticsService.count_pending_friendships(),
             "top_likes": StatisticsService.top_likes(),
 
-            # "top_writer_users": StatisticsService.top_writer_users(),
+            "top_writer_users": StatisticsService.top_writer_users(),
             "visibility": StatisticsService.count_visibility(),
             # "min_max_comm": StatisticsService.min_max_avg_comments(),
             # "top_active_users": StatisticsService.top_active_users(),
