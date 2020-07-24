@@ -2,21 +2,38 @@ from http import HTTPStatus
 from flask import request, current_app as app
 from flask_restful import Resource
 from marshmallow import ValidationError as MarshmallowValidationError
+from mongoengine.queryset.visitor import Q
 from src.clients.auth_api import AuthAPIClient
 from src.clients.media_api import MediaAPIClient
 from src.misc.authorization import check_token
 from src.misc.responses import response_error
 from src.schemas.avatar import AvatarSchema
+from src.models.friendship import Friendship
+from src.models.video import Video
+
+
+def avatar(username):
+    resp_media = MediaAPIClient.get_picture(username)
+    if resp_media.status_code == HTTPStatus.OK:
+        return resp_media.json()
+    app.logger.error("[avatar:%s] Error getting avatar from media-server: %s" % (username, resp_media.text))
+    return None
+
+
+def statistics(username):
+    result = dict(likes=0, dislikes=0, views=0, uploaded=0, friends=0)
+    for video in Video.objects(user=username):
+        result['likes'] += video.count_likes
+        result['dislikes'] += video.count_dislikes
+        result['views'] += video.count_views
+        result['uploaded'] += 1
+    result['friends'] = Friendship.objects((Q(from_user=username) | Q(to_user=username)) & Q(status="approved")).count()
+    return result
 
 
 def marshal_user(username, data):
-    resp_media = MediaAPIClient.get_picture(username)
-    if resp_media.status_code == HTTPStatus.OK:
-        data['avatar'] = resp_media.json()
-    else:
-        app.logger.error("[avatar:%s] Error getting avatar from media-server: %s" %
-                         (username, resp_media.text))
-    data['statistics'] = dict(likes=0, dislikes=0, views=0, uploaded=0, friends=0)
+    data['avatar'] = avatar(username) or data['avatar']
+    data['statistics'] = statistics(username)
 
 
 class Users(Resource):
