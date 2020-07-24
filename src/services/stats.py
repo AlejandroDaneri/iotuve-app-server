@@ -80,15 +80,15 @@ class StatisticsService:
 
     @staticmethod
     def top_likes():
-        return Video.objects().order_by('-count_likes').limit(10).only('title')
+        return Video.objects().order_by('-count_likes').limit(10).only(title=1, count_likes=1)
 
     @staticmethod
     def top_dislikes():
-        return Video.objects().order_by('-count_dislikes').limit(10).only('title')
+        return Video.objects().order_by('-count_dislikes').limit(10).fields(title=1, count_dislikes=1)
 
     @staticmethod
     def top_most_viewed_videos():
-        return Video.objects().order_by('-count_views').limit(10).only('title')
+        return Video.objects().order_by('-count_views').limit(10).fields(title=1, count_views=1)
 
     @staticmethod
     def count_approved_friendships():
