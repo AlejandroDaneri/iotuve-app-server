@@ -27,7 +27,7 @@ class Stats(Resource):
         return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
 
 
-class Statss(Resource):
+class Stats_New(Resource):
     def get(self):
         response = {
             "top_dislikes": StatisticsService.top_dislikes(),
