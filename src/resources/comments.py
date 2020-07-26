@@ -9,6 +9,7 @@ from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
 from src.models.video import Video
 from src.schemas.comment import CommentSchema, CommentPaginatedSchema
+from src.services.fcm import FCMService
 
 
 class Comments(Resource):
@@ -57,7 +58,8 @@ class CommentsList(Resource):
             comment = schema.load(request.get_json(force=True))
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
-        if Video.objects(id=comment.video.id).first() is None:
+        video = Video.objects(id=comment.video.id).first()
+        if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
         if comment.parent and Comment.objects(id=comment.parent.id, video=comment.video.id).first() is None:
             return response_error(HTTPStatus.NOT_FOUND, "Parent comment not found")
@@ -66,4 +68,8 @@ class CommentsList(Resource):
         comment.date_created = now
         comment.date_updated = now
         comment.save()
+
+        if video.user != g.session_username:
+            FCMService.send_new_video_comment(g.session_username, video.user, video.title, silent=True)
+
         return make_response(schema.dump(comment), HTTPStatus.CREATED)

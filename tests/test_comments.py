@@ -41,7 +41,7 @@ class CommentsTestCase(unittest.TestCase):
             "content": "Comentario de prueba",
             "video": str(parent.video.id)
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/comments',
                           headers={'X-Auth-Token': '123456'},
@@ -59,7 +59,7 @@ class CommentsTestCase(unittest.TestCase):
             "video": str(parent.video.id),
             "parent": str(parent.id)
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/comments',
                           headers={'X-Auth-Token': '123456'},
@@ -75,7 +75,7 @@ class CommentsTestCase(unittest.TestCase):
             "content": "",
             "video": str(utils.save_new_video().id)
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/comments',
                           headers={'X-Auth-Token': '123456'},
@@ -88,7 +88,7 @@ class CommentsTestCase(unittest.TestCase):
             "content": "Comentario de prueba",
             "video": str(ObjectId())
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/comments',
                           headers={'X-Auth-Token': '123456'},
@@ -103,7 +103,7 @@ class CommentsTestCase(unittest.TestCase):
             "video": str(utils.save_new_video().id),
             "parent": str(parent.id)
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/comments',
                           headers={'X-Auth-Token': '123456'},
@@ -118,7 +118,7 @@ class CommentsTestCase(unittest.TestCase):
             "video": str(video.id),
             "parent": str(ObjectId())
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/comments',
                           headers={'X-Auth-Token': '123456'},

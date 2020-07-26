@@ -1,9 +1,10 @@
 from src.resources.adminusers import AdminUsers, AdminUsersList, AdminUsersSessions
 from src.resources.comments import Comments, CommentsList
+from src.resources.fcm_tokens import FCMTokens
 from src.resources.friendships import Friendships, FriendshipsList, FriendsByUser
 from src.resources.reactions import Likes, Dislikes, Views
 from src.resources.recovery import Recovery, RecoveryList
-from src.resources.status import Home, Ping, Stats, Status, Stats_New
+from src.resources.status import Home, Ping, Status, StatsNew
 from src.resources.sessions import Sessions, SessionsOwner
 from src.resources.users import Users, UsersList, UsersSessions, UsersAvatars
 from src.resources.videos import Videos, VideosList
@@ -14,9 +15,7 @@ def init_routes(api):
     api.add_resource(Home, "/", APP_PREFIX + "/")
     api.add_resource(Ping, "/ping", APP_PREFIX + "/ping")
 
-    #new stats method
-    #api.add_resource(Stats, "/stats", APP_PREFIX + "/stats")
-    api.add_resource(Stats_New, "/stats", APP_PREFIX + "/stats")
+    api.add_resource(StatsNew, "/stats", APP_PREFIX + "/stats")
     
     api.add_resource(Status, "/status", APP_PREFIX + "/status")
 
@@ -29,6 +28,8 @@ def init_routes(api):
     api.add_resource(UsersList, "/users")
     api.add_resource(UsersSessions, "/users/<string:username>/sessions")
     api.add_resource(UsersAvatars, '/users/<string:username>/avatars')
+
+    api.add_resource(FCMTokens, "/fcm")
 
     api.add_resource(AdminUsers, "/adminusers/<string:username>")
     api.add_resource(AdminUsersList, "/adminusers")

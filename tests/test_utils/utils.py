@@ -6,6 +6,7 @@ from src.schemas.friendship import FriendshipSchema
 from src.schemas.stat import StatSchema
 from src.schemas.video import VideoSchema
 from src.models.comment import Comment
+from src.models.fcm_token import FCMToken
 from src.models.friendship import Friendship
 from src.models.reaction import Like, Dislike, View
 from src.models.stat import Stat
@@ -14,6 +15,10 @@ from src.models.video import Video
 
 def get_object_id():
     return str(ObjectId())
+
+
+def save_new_fcm_token(user, token):
+    FCMToken(user=user, tokens=[token]).save()
 
 
 def save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.000438690185546875):
@@ -138,12 +143,12 @@ def save_new_friendship(from_user=None, to_user=None, status="pending", date_cre
     return new_friendship
 
 
-def get_video(video_id):
-    return Video.objects(id=video_id).first()
-
-
 def get_comment(comment_id):
     return Comment.objects(id=comment_id).first()
+
+
+def get_fcm_tokens(user):
+    return FCMToken.objects(user=user).first()
 
 
 def get_friendship(friendship_id):
@@ -154,8 +159,13 @@ def get_like(video_id, user_id):
     return Friendship.objects(video=video_id, user=user_id).first()
 
 
+def get_video(video_id):
+    return Video.objects(id=video_id).first()
+
+
 def delete_all():
     Comment.objects().delete()
+    FCMToken.objects().delete()
     Friendship.objects().delete()
     Like.objects().delete()
     Stat.objects().delete()

@@ -19,15 +19,15 @@ class Ping(Resource):
         return make_response('Pong!', HTTPStatus.OK)
 
 
-class Stats(Resource):
-    def get(self):
-        schema = StatPaginatedSchema()
-        paginated = schema.load(request.args)
-        stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
-        return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
+#class Stats(Resource):
+#    def get(self):
+#        schema = StatPaginatedSchema()
+#        paginated = schema.load(request.args)
+#        stats = Stat.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+#        return make_response(dict(data=StatSchema().dump(stats, many=True)), HTTPStatus.OK)
 
 
-class Stats_New(Resource):
+class StatsNew(Resource):
     def get(self):
         response = {
             "top_dislikes": StatisticsService.top_dislikes(),

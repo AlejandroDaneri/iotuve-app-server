@@ -8,6 +8,7 @@ from src.misc.responses import response_error, response_ok
 from src.models.reaction import Like, Dislike, View
 from src.models.video import Video
 from src.schemas.reaction import ReactionSchema, ReactionPaginatedSchema
+from src.services.fcm import FCMService
 
 
 class Reactions(Resource):
@@ -40,6 +41,9 @@ class LikeReactions(Reactions):
     def remove_video_reaction(self, video):
         raise NotImplementedError()
 
+    def send_push_notification(self, from_user, to_user, video):
+        raise NotImplementedError()
+
     @check_token
     def post(self, video_id):
         if g.session_admin:
@@ -55,6 +59,8 @@ class LikeReactions(Reactions):
         self.reaction(video=video_id, user=g.session_username, date_created=datetime.datetime.utcnow()).save()
         self.add_video_reaction(video)
         video.save()
+        if video.user != g.session_username:
+            self.send_push_notification(g.session_username, video.user, video)
         return response_ok(HTTPStatus.CREATED, self.message_reaction_saved)
 
     @check_token
@@ -90,6 +96,9 @@ class Likes(LikeReactions):
     def remove_video_reaction(self, video):
         video.count_likes -= 1
 
+    def send_push_notification(self, from_user, to_user, video):
+        FCMService.send_new_video_like(from_user, to_user, video.title, silent=True)
+
 
 class Dislikes(LikeReactions):
 
@@ -104,6 +113,9 @@ class Dislikes(LikeReactions):
 
     def remove_video_reaction(self, video):
         video.count_dislikes -= 1
+
+    def send_push_notification(self, from_user, to_user, video):
+        pass
 
 
 class Views(Reactions):

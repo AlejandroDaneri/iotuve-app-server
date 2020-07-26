@@ -135,6 +135,28 @@ class LikesTestCase(unittest.TestCase):
         self.assertEqual("Admin users can't react to videos", resp.json["message"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_post_video_reaction_invalid_id_should_return_bad_request(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        resp = self.app.post('/api/v1/videos/1234/likes', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        resp = self.app.post('/api/v1/videos/1234/dislikes', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        resp = self.app.post('/api/v1/videos/1234/views', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_post_video_reaction_when_not_exists_should_return_not_found(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        resp = self.app.post('/api/v1/videos/%s/likes' % utils.get_object_id(), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
+        resp = self.app.post('/api/v1/videos/%s/dislikes' % utils.get_object_id(), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
+        resp = self.app.post('/api/v1/videos/%s/views' % utils.get_object_id(), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_post_duplicated_video_like_should_return_bad_request(self, mock_session):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -219,6 +241,24 @@ class LikesTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
         self.assertEqual("Cant remove a view", resp.json["message"])
         self.assertEqual(1, view.video.fetch().reload().count_views)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_video_reaction_invalid_id_should_return_bad_request(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        resp = self.app.delete('/api/v1/videos/1234/likes', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        resp = self.app.delete('/api/v1/videos/1234/dislikes', headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_video_reaction_when_not_exists_should_return_not_found(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        resp = self.app.delete('/api/v1/videos/%s/likes' % utils.get_object_id(), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
+        resp = self.app.delete('/api/v1/videos/%s/dislikes' % utils.get_object_id(), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, resp.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_video_reactions_paginated(self, mock_session):

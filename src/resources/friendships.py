@@ -10,6 +10,7 @@ from src.misc.responses import response_error, response_ok
 from src.schemas.friendship import FriendshipSchema, FriendshipPaginatedSchema
 from src.models.friendship import Friendship
 from src.clients.auth_api import AuthAPIClient
+from src.services.fcm import FCMService
 
 
 class Friendships(Resource):
@@ -38,6 +39,8 @@ class Friendships(Resource):
             friendship.date_updated = now
             friendship.status = status
             friendship.save()
+            if status == "approved":
+                FCMService.send_friendship_approved(friendship.from_user, friendship.to_user, silent=True)
 
         return make_response(FriendshipSchema().dump(friendship), HTTPStatus.OK)
 
@@ -52,7 +55,7 @@ class Friendships(Resource):
         if g.session_username not in (friendship.from_user, friendship.to_user):
             return response_error(HTTPStatus.FORBIDDEN, "Cant delete this friend request")
         friendship.delete()
-        return response_ok(HTTPStatus.OK, "Friend request deleted")
+        return response_ok(HTTPStatus.OK, "Friendship deleted")
 
 
 class FriendshipsList(Resource):
@@ -93,6 +96,9 @@ class FriendshipsList(Resource):
         friendship.date_created = now
         friendship.date_updated = now
         friendship.save()
+
+        FCMService.send_friendship_requested(friendship.from_user, friendship.to_user, silent=True)
+
         return make_response(schema.dump(friendship), HTTPStatus.CREATED)
 
 
