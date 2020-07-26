@@ -18,7 +18,11 @@ def get_object_id():
 
 
 def save_new_fcm_token(user, token):
-    FCMToken(user=user, tokens=[token]).save()
+    user_tokens = FCMToken.objects(user=user)
+    if not user_tokens:
+        FCMToken(user=user, tokens=[token]).save()
+    else:
+        user_tokens.update_one(push__tokens=token)
 
 
 def save_new_stat(path='/api/v1/ping', timestamp='2020-05-30T02:36:53.074000', status=200, time=0.000438690185546875):
