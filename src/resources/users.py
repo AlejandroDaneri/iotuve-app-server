@@ -63,14 +63,8 @@ class Users(Resource):
 
     @check_token
     def patch(self, username):
-        resp_auth = AuthAPIClient.patch_user(username, request.get_json(force=True))
-        data = resp_auth.json()
-        if resp_auth.status_code == HTTPStatus.OK:
-            marshal_user(username, data)
-        else:
-            app.logger.error("[username:%s] Patch user - Error from auth-server: %s" %
-                             (username, resp_auth.text))
-        return data, resp_auth.status_code
+        response = AuthAPIClient.patch_user(username, request.get_json(force=True))
+        return response.json(), response.status_code
 
     @check_token
     def delete(self, username):

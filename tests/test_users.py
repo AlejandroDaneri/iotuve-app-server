@@ -35,11 +35,11 @@ class UsersTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_users_should_return_auth_api_response_status(self, mock_get, mock_picture, mock_session):
+    def test_get_users_should_return_auth_api_response_status(self, mock_get, mock_media, mock_session):
         mock_get.return_value.json.return_value = [dict(username="testuser")]
         mock_get.return_value.status_code = HTTPStatus.OK
-        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+        mock_media.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_media.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
@@ -52,11 +52,11 @@ class UsersTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_user_should_return_auth_api_response(self, mock_get, mock_picture, mock_session):
+    def test_get_user_should_return_auth_api_response(self, mock_get, mock_media, mock_session):
         mock_get.return_value.json.return_value = dict(username="testuser")
         mock_get.return_value.status_code = HTTPStatus.OK
-        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+        mock_media.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_media.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
@@ -85,11 +85,10 @@ class UsersTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.patch')
-    def test_patch_user_should_return_auth_api_response(self, mock_patch, mock_picture, mock_session):
+    def test_patch_user_should_return_auth_api_response(self, mock_patch, mock_media, mock_session):
         mock_patch.return_value.json.return_value = dict(username="testuser")
         mock_patch.return_value.status_code = HTTPStatus.OK
-        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+        mock_media.side_effect = Exception("should not call media api")
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.patch(
@@ -98,16 +97,15 @@ class UsersTestCase(unittest.TestCase):
             json=dict(op="replace", path="password", value="newpassword"))
         self.assertEqual(HTTPStatus.OK, r.status_code)
         self.assertEqual("testuser", r.json["username"])
-        self.assertEqual("testuser", r.json["avatar"]["user_id"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.put')
-    def test_put_user_should_return_auth_api_response(self, mock_put, mock_picture, mock_session):
+    def test_put_user_should_return_auth_api_response(self, mock_put, mock_media, mock_session):
         mock_put.return_value.json.return_value = dict(username="testuser")
         mock_put.return_value.status_code = HTTPStatus.OK
-        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+        mock_media.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_media.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.put(
@@ -121,9 +119,9 @@ class UsersTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.delete_picture')
     @patch('src.clients.auth_api.requests.delete')
-    def test_delete_user_should_return_auth_api_response(self, mock_delete, mock_picture, mock_session):
-        mock_picture.return_value.json.return_value = dict(message="ok")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+    def test_delete_user_should_return_auth_api_response(self, mock_delete, mock_media, mock_session):
+        mock_media.return_value.json.return_value = dict(message="ok")
+        mock_media.return_value.status_code = HTTPStatus.OK
         mock_delete.return_value.json.return_value = dict(message="ok")
         mock_delete.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
@@ -137,11 +135,11 @@ class UsersTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_user_should_return_auth_api_statistics(self, mock_get, mock_picture, mock_session):
+    def test_get_user_should_return_auth_api_statistics(self, mock_get, mock_media, mock_session):
         mock_get.return_value.json.return_value = dict(username="testuser")
         mock_get.return_value.status_code = HTTPStatus.OK
-        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+        mock_media.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_media.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         r = self.app.get(
@@ -155,11 +153,11 @@ class UsersTestCase(unittest.TestCase):
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.requests.get')
-    def test_get_user_should_return_auth_api_statistics_with_data(self, mock_get, mock_picture, mock_session):
+    def test_get_user_should_return_auth_api_statistics_with_data(self, mock_get, mock_media, mock_session):
         mock_get.return_value.json.return_value = dict(username="testuser")
         mock_get.return_value.status_code = HTTPStatus.OK
-        mock_picture.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
-        mock_picture.return_value.status_code = HTTPStatus.OK
+        mock_media.return_value.json.return_value = dict(user_id="testuser", name="picture", url="http...")
+        mock_media.return_value.status_code = HTTPStatus.OK
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
 
