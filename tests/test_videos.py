@@ -456,36 +456,6 @@ class VideosTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.OK, resp.status_code)
         self.assertEqual(0, len(resp.json["data"]))
 
-    def test_query_videos_wall(self):
-        from mongoengine.queryset.visitor import Q
-        from src.models.friendship import Friendship
-        from src.models.video import Video
-
-        user1 = "testuser1"
-        user2 = "testuser2"
-        user3 = "testuser3"
-        user4 = "testuser4"
-        video = utils.save_new_video(user=user1, visibility="private")  # not count
-        video = utils.save_new_video(user=user2, visibility="private")
-        video = utils.save_new_video(user=user2, visibility="private")
-        video = utils.save_new_video(user=user3, visibility="private")
-        video = utils.save_new_video(user=user4, visibility="public")   # not friend but public
-        video = utils.save_new_video(user=user4, visibility="private")  # not friend and private
-
-        utils.save_new_friendship(from_user=user1, to_user=user2, status="approved")
-        utils.save_new_friendship(from_user=user3, to_user=user1, status="approved")
-
-        # OBTENER LOS VIDEOS DE AMIGOS PRIVADOS DE user1 MAS TODOS LOS PUBLICOS DE CUALQUIER USUARIO
-
-        query = (Q(from_user=user1) | Q(to_user=user1)) & Q(status="approved")
-        friends = Friendship.objects(query).fields(to_user=1, from_user=1)
-        usernames = [friend.to_user if friend.to_user != user1 else friend.from_user for friend in friends]
-
-        query = Q(user__in=usernames) | (Q(visibility="public") & (Q(user__ne=user1)))
-        videos = Video.objects(query).order_by('-importance')
-
-        self.assertEqual(4, videos.count())
-
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_videos_wall(self, mock_session, mock_media):
@@ -493,7 +463,7 @@ class VideosTestCase(unittest.TestCase):
         user2 = "testuser2"
         user3 = "testuser3"
         user4 = "testuser4"
-        video1 = utils.save_new_video(user=user1, visibility="private")  # not count
+        video1 = utils.save_new_video(user=user1, visibility="private")
         video2 = utils.save_new_video(user=user2, visibility="private")
         video3 = utils.save_new_video(user=user2, visibility="private")
         video4 = utils.save_new_video(user=user3, visibility="private")
@@ -503,7 +473,7 @@ class VideosTestCase(unittest.TestCase):
         utils.save_new_friendship(from_user=user1, to_user=user2, status="approved")
         utils.save_new_friendship(from_user=user3, to_user=user1, status="approved")
 
-        expected_videos = [str(video2.id), str(video3.id), str(video4.id), str(video5.id)]
+        expected_videos = [str(video1.id), str(video2.id), str(video3.id), str(video4.id), str(video5.id)]
 
         mock_session.return_value.json.return_value = dict(username="testuser1")
         mock_session.return_value.status_code = HTTPStatus.OK

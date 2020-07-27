@@ -22,6 +22,7 @@ class Video(db.Document):
     @staticmethod
     def get_videos_wall(wall_user, friends_wall_user, video_id, user, visibility, offset, limit):
         query = (Q(user__in=friends_wall_user) | (Q(visibility="public") & (Q(user__ne=wall_user))))
+        query |= Q(user=wall_user)
         if video_id:
             query &= Q(id=video_id)
         if user:
