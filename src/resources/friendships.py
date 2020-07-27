@@ -1,10 +1,9 @@
 import datetime
 from http import HTTPStatus
 from flask_restful import Resource
-from flask import make_response, request, g, current_app as app
+from flask import make_response, request, g
 from flask_mongoengine import ValidationError as MongoValidationError
 from marshmallow import ValidationError as MarshmallowValidationError
-from mongoengine.queryset.visitor import Q
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.schemas.friendship import FriendshipSchema, FriendshipPaginatedSchema
@@ -18,7 +17,7 @@ class Friendships(Resource):
     @check_token
     def put(self, friendship_id):
         try:
-            friendship = Friendship.objects(id=friendship_id).first()
+            friendship = Friendship.get_friendship(friendship_id)
         except MongoValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err))
 
@@ -47,7 +46,7 @@ class Friendships(Resource):
     @check_token
     def delete(self, friendship_id):
         try:
-            friendship = Friendship.objects(id=friendship_id).first()
+            friendship = Friendship.get_friendship(friendship_id)
         except MongoValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if friendship is None:
@@ -66,7 +65,7 @@ class FriendshipsList(Resource):
             paginated = FriendshipPaginatedSchema().load(request.args)
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
-        friendships = Friendship.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+        friendships = Friendship.get_friendships(paginated["filters"], paginated["offset"], paginated["limit"])
         return make_response(dict(data=FriendshipSchema().dump(friendships, many=True)), HTTPStatus.OK)
 
     @check_token
@@ -80,20 +79,17 @@ class FriendshipsList(Resource):
         except MarshmallowValidationError as e:
             return response_error(HTTPStatus.BAD_REQUEST, str(e.normalized_messages()), code=-1)
 
-        friendship.from_user = g.session_username
-
         if friendship.to_user == g.session_username:
             return response_error(HTTPStatus.BAD_REQUEST, "Cant request yourself")
 
         if AuthAPIClient.get_user(friendship.to_user).status_code != HTTPStatus.OK:
             return response_error(HTTPStatus.BAD_REQUEST, "Error getting to_user", code=-2)
 
-        if Friendship.objects(
-             ((Q(from_user=friendship.from_user) & Q(to_user=friendship.to_user)) |
-              (Q(from_user=friendship.to_user) & Q(to_user=friendship.from_user)))).count():
+        if Friendship.friendship_exist(g.session_username, friendship.to_user):
             return response_error(HTTPStatus.BAD_REQUEST, "Friend request already exist", code=-4)
 
         now = datetime.datetime.utcnow()
+        friendship.from_user = g.session_username
         friendship.status = "pending"
         friendship.date_created = now
         friendship.date_updated = now
@@ -108,7 +104,7 @@ class FriendsByUser(Resource):
 
     @check_token
     def get(self, username):
-        friendships = Friendship.objects((Q(from_user=username) | Q(to_user=username)) & Q(status="approved"))
+        friendships = Friendship.get_user_friends(username)
         result = []
         for friendship in friendships:
             if friendship.from_user == username:

@@ -159,7 +159,3 @@ class StatisticsService:
             {"$limit": 10}
         ]
         return [doc for doc in Dislike.objects().aggregate(pipeline)]
-
-
-
-

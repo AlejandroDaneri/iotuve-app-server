@@ -8,6 +8,7 @@ from src.clients.media_api import MediaAPIClient
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
+from src.models.friendship import Friendship
 from src.models.reaction import Like, Dislike, View
 from src.models.video import Video
 from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
@@ -22,6 +23,11 @@ class Videos(Resource):
             return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
+
+        if not g.session_admin and video.user != g.session_username and video.visibility == "private"\
+                and Friendship.friendship_exist(video.user, g.session_username, "approved") == 0:
+            return response_error(HTTPStatus.FORBIDDEN, "This video is private")
+
         resp_media = MediaAPIClient.get_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
@@ -97,7 +103,22 @@ class VideosList(Resource):
             paginated = VideoPaginatedSchema().load(request.args)
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
-        videos = Video.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+
+        filters = paginated["filters"]
+        offset = paginated["offset"]
+        limit = paginated["limit"]
+        user = filters.get("user", None)
+
+        if not g.session_admin and user != g.session_username:
+            video_id = filters.get("id", None)
+            visibility = filters.get("visibility", None)
+            friends = Friendship.get_user_friends_list(g.session_username)
+            videos = Video.get_videos_wall(
+                wall_user=g.session_username, friends_wall_user=friends, video_id=video_id,
+                user=user, visibility=visibility, offset=offset, limit=limit)
+        else:
+            videos = Video.get_videos(filters=filters, offset=offset, limit=limit)
+
         results = []
         for video in videos:
             resp_media = MediaAPIClient.get_video(video.id)
