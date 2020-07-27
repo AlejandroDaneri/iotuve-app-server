@@ -16,11 +16,7 @@ class FCMTokens(Resource):
         if not token:
             return response_error(HTTPStatus.BAD_REQUEST, "Must provide FCM token")
 
-        try:
-            user_tokens = FCMToken.objects(user=g.session_username)
-        except MongoValidationError as err:
-            return response_error(HTTPStatus.BAD_REQUEST, str(err))
-
+        user_tokens = FCMToken.objects(user=g.session_username)
         if user_tokens:
             if token in user_tokens.first().tokens:
                 return response_ok(HTTPStatus.ALREADY_REPORTED, "FCM token already exists")

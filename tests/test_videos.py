@@ -393,6 +393,21 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_videos_paginated_wrong_limit_or_offset_should_return_bad_request(self, mock_session, mock_media):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_media.side_effect = Exception("should not call media api")
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=0, limit=5))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'limit': ['Must be one of: 10, 20, 30, 40, 50.']}", resp.json["message"])
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=-2, limit=10))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'offset': ['Must be greater than or equal to 0.']}", resp.json["message"])
+
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_media_server_error_on_get_videos_should_not_return_server_error(self, mock_session, mock_media):
         for _ in range(1, 25):
             utils.save_new_video()

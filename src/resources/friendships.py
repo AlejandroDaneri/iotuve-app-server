@@ -62,8 +62,10 @@ class FriendshipsList(Resource):
 
     @check_token
     def get(self):
-        schema = FriendshipPaginatedSchema()
-        paginated = schema.load(request.args)
+        try:
+            paginated = FriendshipPaginatedSchema().load(request.args)
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         friendships = Friendship.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
         return make_response(dict(data=FriendshipSchema().dump(friendships, many=True)), HTTPStatus.OK)
 

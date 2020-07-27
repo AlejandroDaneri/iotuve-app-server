@@ -126,6 +126,20 @@ class CommentsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.NOT_FOUND, r.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_post_comment_with_admin_user_should_return_forbidden(self, mock_session):
+        video = utils.save_new_video()
+        post_json = {
+            "content": "Comentario de prueba",
+            "video": str(video.id),
+            "parent": str(ObjectId())
+        }
+        mock_session.return_value.json.return_value = dict(username="testusercomment")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        resp = self.app.post('/api/v1/comments',
+                             headers={'X-Auth-Token': '123456', 'X-Admin': 'true'}, json=post_json)
+        self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_delete_comment_should_return_ok(self, mock_session):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -149,6 +163,22 @@ class CommentsTestCase(unittest.TestCase):
         self.assertIsNotNone(utils.get_comment(comment.id))
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_comment_should_invalid_id_return_bad_request(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        res_get = self.app.delete('/api/v1/comments/{}'.format(1234),
+                               headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, res_get.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_delete_comment_should_not_exist_return_not_found(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        res_get = self.app.delete('/api/v1/comments/{}'.format(utils.get_object_id()),
+                               headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, res_get.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_comment_should_return_ok(self, mock_session):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -157,6 +187,22 @@ class CommentsTestCase(unittest.TestCase):
                                headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.OK, res_get.status_code)
         self.assertEqual(str(comment.id), res_get.json["id"])
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_comment_should_invalid_id_return_bad_request(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        res_get = self.app.get('/api/v1/comments/{}'.format(1234),
+                               headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.BAD_REQUEST, res_get.status_code)
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_comment_should_not_exist_return_not_found(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        res_get = self.app.get('/api/v1/comments/{}'.format(utils.get_object_id()),
+                               headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.NOT_FOUND, res_get.status_code)
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_comments_no_filter(self, mock_session):
@@ -221,14 +267,13 @@ class CommentsTestCase(unittest.TestCase):
         self.assertEqual(10, len(r.json["data"]))
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_get_comments_paginated_error(self, mock_session):
-        video = utils.save_new_video()
-        for _ in range(1, 25):
-            utils.save_new_comment(video.id)
-
+    def test_get_comments_paginated_wrong_limit_or_offset_should_return_bad_request(self, mock_session):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
-        r = self.app.get('/api/v1/comments',
-                         headers={'X-Auth-Token': '123456'},
-                         query_string=dict(video=video.id, offset=0, limit=1))
-        self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)
+        resp = self.app.get('/api/v1/comments', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=0, limit=5))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'limit': ['Must be one of: 10, 20, 30, 40, 50.']}", resp.json["message"])
+
+        resp = self.app.get('/api/v1/comments', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=-2, limit=10))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'offset': ['Must be greater than or equal to 0.']}", resp.json["message"])

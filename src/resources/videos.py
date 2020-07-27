@@ -93,8 +93,10 @@ class Videos(Resource):
 class VideosList(Resource):
     @check_token
     def get(self):
-        schema = VideoPaginatedSchema()
-        paginated = schema.load(request.args)
+        try:
+            paginated = VideoPaginatedSchema().load(request.args)
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         videos = Video.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
         results = []
         for video in videos:

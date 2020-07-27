@@ -324,6 +324,19 @@ class FriendRequestsTestCase(unittest.TestCase):
         self.assertEqual(10, len(r.json["data"]))
 
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_friendship_paginated_wrong_limit_or_offset_should_return_bad_request(self, mock_session):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        resp = self.app.get('/api/v1/friendships', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=0, limit=5))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'limit': ['Must be one of: 10, 20, 30, 40, 50.']}", resp.json["message"])
+
+        resp = self.app.get('/api/v1/friendships', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=-2, limit=10))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'offset': ['Must be greater than or equal to 0.']}", resp.json["message"])
+
+
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_user_friends(self, mock_session):
         username = "testuser"
         for _ in range(0, 10):
