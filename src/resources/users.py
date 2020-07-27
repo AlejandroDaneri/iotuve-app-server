@@ -16,7 +16,8 @@ def avatar(username):
     resp_media = MediaAPIClient.get_picture(username)
     if resp_media.status_code == HTTPStatus.OK:
         return resp_media.json()
-    app.logger.error("[avatar:%s] Error getting avatar from media-server: %s" % (username, resp_media.text))
+    if resp_media.status_code != HTTPStatus.NOT_FOUND:
+        app.logger.error("[avatar:%s] Error getting avatar from media-server: %s" % (username, resp_media.text))
     return None
 
 
