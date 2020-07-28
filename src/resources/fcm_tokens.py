@@ -42,4 +42,4 @@ class FCMTokens(Resource):
 
         user_tokens.update_one(pull__tokens=token)
 
-        return response_ok(HTTPStatus.OK, "FCM token saved")
+        return response_ok(HTTPStatus.OK, "FCM token deleted")
