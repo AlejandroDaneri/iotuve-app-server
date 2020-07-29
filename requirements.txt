@@ -27,7 +27,6 @@ MarkupSafe==1.1.1
 marshmallow==3.6.0
 mccabe==0.6.1
 mongoengine==0.20.0
-mongomock==3.19.1.dev19
 msgpack==1.0.0
 protobuf==3.12.2
 pyasn1==0.4.8
