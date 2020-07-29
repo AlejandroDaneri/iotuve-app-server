@@ -1,4 +1,5 @@
 aniso8601==8.0.0
+APScheduler==3.6.3
 astroid==2.4.1
 business-rules==1.0.1
 CacheControl==0.12.6
@@ -41,6 +42,7 @@ sentinels==1.0.0
 six==1.14.0
 toml==0.10.0
 typed-ast==1.4.1
+tzlocal==2.1
 uritemplate==3.0.1
 urllib3==1.25.9
 Werkzeug==1.0.1

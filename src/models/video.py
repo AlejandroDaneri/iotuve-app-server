@@ -4,6 +4,7 @@ from src.misc.importance import ImportanceCalculator
 
 
 class Video(db.Document):
+    meta = {'strict': False}
     title = db.StringField(required=False, default=None)
     description = db.StringField(required=False, default=None)
     visibility = db.StringField(required=True)
@@ -32,11 +33,16 @@ class Video(db.Document):
             query &= Q(visibility=visibility)
         return Video.objects(query).order_by('-importance').skip(offset).limit(limit)
 
+    @staticmethod
+    def update_videos_importance():
+        for video in Video.objects():
+            video.save()
+
     def save(self, *args, **kwargs):
-        self.calculate_importance()
+        self.__set_importance()
         return super(Video, self).save(*args, **kwargs)
 
-    def calculate_importance(self):
+    def __set_importance(self):
         import datetime
         from .comment import Comment
         from .reaction import Like, Dislike, View
