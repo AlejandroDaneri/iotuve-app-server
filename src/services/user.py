@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from flask import current_app as app
-from mongoengine.queryset.visitor import Q
 from src.clients.media_api import MediaAPIClient
 from src.models.friendship import Friendship
 from src.models.video import Video
@@ -25,7 +24,7 @@ class UserService:
             result['dislikes'] += video.count_dislikes
             result['views'] += video.count_views
             result['uploaded'] += 1
-        result['friends'] = Friendship.objects((Q(from_user=username) | Q(to_user=username)) & Q(status="approved")).count()
+        result['friends'] = Friendship.count_user_friends(username)
         return result
 
     @staticmethod
