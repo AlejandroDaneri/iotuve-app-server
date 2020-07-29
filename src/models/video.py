@@ -1,5 +1,6 @@
 from mongoengine.queryset.visitor import Q
 from src.conf.database import db
+from src.misc.importance import ImportanceCalculator
 
 
 class Video(db.Document):
@@ -30,3 +31,28 @@ class Video(db.Document):
         if visibility:
             query &= Q(visibility=visibility)
         return Video.objects(query).order_by('-importance').skip(offset).limit(limit)
+
+    def save(self, *args, **kwargs):
+        self.calculate_importance()
+        return super(Video, self).save(*args, **kwargs)
+
+    def calculate_importance(self):
+        import datetime
+        from .comment import Comment
+        from .reaction import Like, Dislike, View
+        from .friendship import Friendship
+        video = {
+            'user_posts': Video.objects(user=self.user).count(),
+            'user_reactions': (Like.count_by_user(self.user) +
+                               Dislike.count_by_user(self.user) +
+                               View.count_by_user(self.user)),
+            'user_friends': Friendship.count_user_friends(self.user),
+            'days': (self.date_created.date() - datetime.date.today()).days,
+            'likes': self.count_likes,
+            'dislikes': self.count_dislikes,
+            'views': self.count_views,
+            'comments': Comment.count_by_video(self.id) if self.id else 0,
+            'importance': 0
+        }
+
+        self.importance = ImportanceCalculator(video).calculate_importance()

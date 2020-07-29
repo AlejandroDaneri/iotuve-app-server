@@ -9,3 +9,7 @@ class Comment(db.Document):
     user = db.StringField(required=True)
     date_created = db.ComplexDateTimeField(required=True)
     date_updated = db.ComplexDateTimeField(required=True)
+
+    @staticmethod
+    def count_by_video(video):
+        return Comment.objects(video=video).count()
