@@ -9,9 +9,9 @@ from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
 from src.models.friendship import Friendship
-from src.models.reaction import Like, Dislike, View
 from src.models.video import Video
 from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
+from src.services.video import VideoService, MediaServerError, AuthServerError
 
 
 class Videos(Resource):
@@ -28,17 +28,13 @@ class Videos(Resource):
                 and Friendship.friendship_exist(video.user, g.session_username, "approved") == 0:
             return response_error(HTTPStatus.FORBIDDEN, "This video is private")
 
-        resp_media = MediaAPIClient.get_video(video.id)
-        if resp_media.status_code != HTTPStatus.OK:
-            app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                             (video.id, resp_media.text))
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
-        schema = VideoSchema()
-        result = schema.dump(video)
-        result["media"] = resp_media.json()
-        result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
-        result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
-        result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
+        try:
+            result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+        except MediaServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+        except AuthServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
         return make_response(result, HTTPStatus.OK)
 
     @check_token
@@ -66,16 +62,13 @@ class Videos(Resource):
         video.date_updated = datetime.datetime.utcnow()
         video.save()
 
-        resp_media = MediaAPIClient.get_video(video.id)
-        if resp_media.status_code != HTTPStatus.OK:
-            app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                             (video.id, resp_media.text))
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
-        result = schema.dump(video)
-        result["media"] = resp_media.json()
-        result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
-        result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
-        result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
+        try:
+            result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+        except MediaServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+        except AuthServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
         return make_response(result, HTTPStatus.OK)
 
     @check_token
@@ -123,16 +116,12 @@ class VideosList(Resource):
 
         results = []
         for video in videos:
-            resp_media = MediaAPIClient.get_video(video.id)
-            if resp_media.status_code != HTTPStatus.OK:
-                app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                                 (video.id, resp_media.text))
+            try:
+                result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+            except MediaServerError:
                 continue
-            result = VideoSchema().dump(video)
-            result["media"] = resp_media.json()
-            result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
-            result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
-            result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
+            except AuthServerError:
+                continue
             results.append(result)
         return make_response(dict(data=results), HTTPStatus.OK)
 
@@ -140,11 +129,10 @@ class VideosList(Resource):
     def post(self):
         if g.session_admin:
             return response_error(HTTPStatus.FORBIDDEN, "Admin users can't post videos")
-        schema_video = VideoSchema()
         schema_media = MediaSchema()
         try:
             request_json = request.get_json(force=True)
-            video = schema_video.load(request_json)
+            video = VideoSchema().load(request_json)
             media = schema_media.load(request_json.get("media", {}))
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
@@ -152,15 +140,19 @@ class VideosList(Resource):
         video.user = g.session_username
         video.date_created = now
         video.date_updated = now
-        new_video = video.save()
-        media["video_id"] = new_video.id
-        media["user_id"] = new_video.user
+        video.save()
+        media["video_id"] = video.id
+        media["user_id"] = video.user
         resp_media = MediaAPIClient.post_video(schema_media.dump(media))
         if resp_media.status_code != HTTPStatus.CREATED:
             app.logger.error("[video_name:%s] Error saving new video on media-server: %s" %
                              (media["name"], resp_media.text))
             video.delete()
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error saving media")
-        result = schema_video.dump(new_video)
-        result["media"] = resp_media.json()
+        try:
+            result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+        except MediaServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+        except AuthServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
         return make_response(result, HTTPStatus.CREATED)

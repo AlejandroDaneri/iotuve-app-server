@@ -32,44 +32,18 @@ class LikesTestCase(unittest.TestCase):
             res = self.app.delete('/api/v1/videos/1234/%s' % reaction)
             self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_new_valid_video_reaction_should_return_ok(self, mock_session, mock_media):
+    def test_post_new_valid_video_reaction_should_return_ok(self, mock_session, mock_user, mock_media, mock_picture):
         video = utils.save_new_video()
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
-        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
-        mock_media.return_value.json.return_value = dict(name="testmedia", video_id="123456",
-                                                         date_created='2020-05-30T02:36:53.074000',
-                                                         url=url, thumb=url, size=3215421, type="video/mp4")
-        mock_media.return_value.status_code = HTTPStatus.OK
-
-        resp = self.app.get('/api/v1/videos/%s' % video.id, headers={'X-Auth-Token': '123456'})
-        self.assertEqual(HTTPStatus.OK, resp.status_code)
-        self.assertEqual(False, resp.json["user_like"])
-        self.assertEqual(False, resp.json["user_dislike"])
-        self.assertEqual(False, resp.json["user_view"])
-
-        resp = self.app.post('/api/v1/videos/%s/likes' % video.id, headers={'X-Auth-Token': '123456'})
-        self.assertEqual(HTTPStatus.CREATED, resp.status_code)
-        self.assertEqual("Like saved", resp.json["message"])
-        self.assertEqual(1, video.reload().count_likes)
-
-        resp = self.app.post('/api/v1/videos/%s/dislikes' % video.id, headers={'X-Auth-Token': '123456'})
-        self.assertEqual(HTTPStatus.CREATED, resp.status_code)
-        self.assertEqual("Dislike saved", resp.json["message"])
-        self.assertEqual(1, video.reload().count_dislikes)
-
-        resp = self.app.post('/api/v1/videos/%s/views' % video.id, headers={'X-Auth-Token': '123456'})
-        self.assertEqual(HTTPStatus.CREATED, resp.status_code)
-        self.assertEqual("View saved", resp.json["message"])
-
-    @patch('src.clients.media_api.MediaAPIClient.get_video')
-    @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_new_valid_video_reaction_should_return_ok(self, mock_session, mock_media):
-        video = utils.save_new_video()
-        mock_session.return_value.json.return_value = dict(username="testuser")
-        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
         mock_media.return_value.json.return_value = dict(name="testmedia", video_id="123456",
                                                          date_created='2020-05-30T02:36:53.074000',
