@@ -15,6 +15,10 @@ class Friendship(db.Document):
         return Friendship.objects((Q(from_user=user) | Q(to_user=user)) & Q(status="approved"))
 
     @staticmethod
+    def count_user_friends(user):
+        return Friendship.objects((Q(from_user=user) | Q(to_user=user)) & Q(status="approved")).count()
+
+    @staticmethod
     def get_user_friends_list(user):
         query = (Q(from_user=user) | Q(to_user=user)) & Q(status="approved")
         friends = Friendship.objects(query).fields(to_user=1, from_user=1)

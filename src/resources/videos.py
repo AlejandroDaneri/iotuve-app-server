@@ -58,12 +58,14 @@ class Videos(Resource):
             new_video = schema.load(request.get_json(force=True))
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
+
         video.title = new_video.title
         video.description = new_video.description
         video.location = new_video.location
         video.visibility = new_video.visibility
         video.date_updated = datetime.datetime.utcnow()
         video.save()
+
         resp_media = MediaAPIClient.get_video(video.id)
         if resp_media.status_code != HTTPStatus.OK:
             app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
