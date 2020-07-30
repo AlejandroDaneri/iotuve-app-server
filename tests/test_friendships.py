@@ -36,9 +36,10 @@ class FriendRequestsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
 
     @patch('src.clients.fcm_api.FCMAPIClient.send_message')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_new_valid_friendship_and_fcm_message(self, mock_session, mock_user, mock_fcm):
+    def test_post_new_valid_friendship_and_fcm_message(self, mock_session, mock_user, mock_picture, mock_fcm):
         post_json = {
             "to_user": "otheruser",
             "message": "Mensaje de prueba"
@@ -47,6 +48,8 @@ class FriendRequestsTestCase(unittest.TestCase):
         mock_session.return_value.status_code = HTTPStatus.OK
         mock_user.return_value.json.return_value = dict(username="otheruser")
         mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser1")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_fcm.return_value.json.return_value = {
             "multicast_id": 3752629586375318742, "success": 1, "failure": 0, "canonical_ids": 0,
             "results": [{"message_id": "0:1595701209097390%50ceb1d450ceb1d4"}]}
@@ -57,8 +60,7 @@ class FriendRequestsTestCase(unittest.TestCase):
         r = self.app.post('/api/v1/friendships', headers={'X-Auth-Token': '123456'}, json=post_json)
         self.assertEqual(HTTPStatus.CREATED, r.status_code)
         self.assertEqual("Mensaje de prueba", r.json["message"])
-        self.assertEqual("otheruser", r.json["to_user"])
-        self.assertEqual("testuser", r.json["from_user"])
+        self.assertEqual("otheruser", r.json["to_user"]["username"])
 
     @patch('src.clients.fcm_api.FCMAPIClient.send_message')
     @patch('src.clients.auth_api.AuthAPIClient.get_user')
@@ -77,9 +79,10 @@ class FriendRequestsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
 
     @patch('src.clients.fcm_api.FCMAPIClient.send_message')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_new_valid_friendship_and_send_fcm_message_error_should_return_created(self, mock_session, mock_user, mock_fcm):
+    def test_post_new_valid_friendship_and_send_fcm_message_error_should_return_created(self, mock_session, mock_user, mock_picture, mock_fcm):
         post_json = {
             "to_user": "otheruser",
             "message": "Mensaje de prueba"
@@ -88,6 +91,8 @@ class FriendRequestsTestCase(unittest.TestCase):
         mock_session.return_value.status_code = HTTPStatus.OK
         mock_user.return_value.json.return_value = dict(username="otheruser")
         mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="otheruser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_fcm.return_value.json.return_value = {
             "multicast_id": 3752629586375318742, "success": 1, "failure": 0, "canonical_ids": 0,
             "results": [{"message_id": "0:1595701209097390%50ceb1d450ceb1d4"}]}
@@ -99,13 +104,13 @@ class FriendRequestsTestCase(unittest.TestCase):
         r = self.app.post('/api/v1/friendships', headers={'X-Auth-Token': '123456'}, json=post_json)
         self.assertEqual(HTTPStatus.CREATED, r.status_code)
         self.assertEqual("Mensaje de prueba", r.json["message"])
-        self.assertEqual("otheruser", r.json["to_user"])
-        self.assertEqual("testuser", r.json["from_user"])
+        self.assertEqual("otheruser", r.json["to_user"]["username"])
 
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_new_valid_friendship_empty_message_should_return_created(self, mock_session, mock_user):
+    def test_post_new_valid_friendship_empty_message_should_return_created(self, mock_session, mock_user, mock_picture):
         post_json = {
             "to_user": "otheruser",
             "message": ""
@@ -114,13 +119,14 @@ class FriendRequestsTestCase(unittest.TestCase):
         mock_session.return_value.status_code = HTTPStatus.OK
         mock_user.return_value.json.return_value = dict(username="otheruser")
         mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="otheruser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/friendships',
                           headers={'X-Auth-Token': '123456'},
                           json=post_json)
         self.assertEqual(HTTPStatus.CREATED, r.status_code)
         self.assertEqual("", r.json["message"])
-        self.assertEqual("otheruser", r.json["to_user"])
-        self.assertEqual("testuser", r.json["from_user"])
+        self.assertEqual("otheruser", r.json["to_user"]["username"])
 
     @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
@@ -138,17 +144,20 @@ class FriendRequestsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)
         self.assertTrue("message" in r.json["message"])
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_same_friendship_should_return_bad_request(self, mock_session, mock_user):
+    def test_post_same_friendship_should_return_bad_request(self, mock_session, mock_user, mock_picture):
         post_json = {
             "to_user": "otheruser",
             "message": ""
         }
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
-        mock_user.return_value.json.return_value = dict(username="otheruser")
+        mock_user.return_value.json.return_value = dict(username="otheruser", avatar="")
         mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="otheruser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         r = self.app.post('/api/v1/friendships',
                           headers={'X-Auth-Token': '123456'},
                           json=post_json)
@@ -237,10 +246,16 @@ class FriendRequestsTestCase(unittest.TestCase):
         self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)
 
     @patch('src.clients.fcm_api.FCMAPIClient.send_message')
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_put_friendship_pending_to_approved_should_return_ok(self, mock_session, mock_fcm):
+    def test_put_friendship_pending_to_approved_should_return_ok(self, mock_session, mock_user, mock_picture, mock_fcm):
         mock_session.return_value.json.return_value = dict(username="to_user")
         mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser1")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser1")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         mock_fcm.return_value.json.return_value = {
             "multicast_id": 3752629586375318742, "success": 1, "failure": 0, "canonical_ids": 0,
             "results": [{"message_id": "0:1595701209097390%50ceb1d450ceb1d4"}]}
@@ -302,8 +317,10 @@ class FriendRequestsTestCase(unittest.TestCase):
                          json=put_json)
         self.assertEqual(HTTPStatus.BAD_REQUEST, r.status_code)
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_get_friendships_paginated(self, mock_session):
+    def test_get_friendships_paginated(self, mock_session, mock_user, mock_picture):
         from_user = "testuser"
         for _ in range(0, 10):
             utils.save_new_friendship(from_user, status="pending")
@@ -311,9 +328,15 @@ class FriendRequestsTestCase(unittest.TestCase):
 
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser1")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser1")
+        mock_picture.return_value.status_code = HTTPStatus.OK
+
         r = self.app.get('/api/v1/friendships',
                          headers={'X-Auth-Token': '123456'},
                          query_string=dict(from_user=from_user, status="pending", offset=0, limit=20))
+
         self.assertEqual(HTTPStatus.OK, r.status_code)
         self.assertEqual(10, len(r.json["data"]))
 
@@ -336,20 +359,29 @@ class FriendRequestsTestCase(unittest.TestCase):
         self.assertEqual("{'offset': ['Must be greater than or equal to 0.']}", resp.json["message"])
 
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_get_user_friends(self, mock_session):
+    def test_get_user_friends(self, mock_session, mock_user, mock_picture):
         username = "testuser"
         for _ in range(0, 10):
             utils.save_new_friendship(from_user=username, status="pending")
             utils.save_new_friendship(from_user=username, status="approved")
             utils.save_new_friendship(to_user=username, status="approved")
-        mock_session.return_value.json.return_value = dict(username="testuser")
+
+        mock_session.return_value.json.return_value = dict(username=username)
         mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser1")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser1")
+        mock_picture.return_value.status_code = HTTPStatus.OK
+
         r = self.app.get('/api/v1/users/{}/friends'.format(username),
                          headers={'X-Auth-Token': '123456'})
+
         self.assertEqual(HTTPStatus.OK, r.status_code)
         friends = r.json["friends"]
         self.assertEqual(20, len(friends))
         friend = friends[0]
         self.assertIsNotNone(friend.get("friendship_id", None))
-        self.assertIsNotNone(friend.get("username", None))
+        self.assertIsNotNone(friend.get("user", None))

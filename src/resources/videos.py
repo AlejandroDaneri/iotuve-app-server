@@ -11,7 +11,7 @@ from src.models.comment import Comment
 from src.models.friendship import Friendship
 from src.models.video import Video
 from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
-from src.services.video import VideoService, MediaServerError, AuthServerError
+from src.services.video import VideoService, MediaServerError
 
 
 class Videos(Resource):
@@ -31,8 +31,6 @@ class Videos(Resource):
         try:
             result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
         except MediaServerError as e:
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
-        except AuthServerError as e:
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
 
         return make_response(result, HTTPStatus.OK)
@@ -65,8 +63,6 @@ class Videos(Resource):
         try:
             result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
         except MediaServerError as e:
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
-        except AuthServerError as e:
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
 
         return make_response(result, HTTPStatus.OK)
@@ -120,8 +116,6 @@ class VideosList(Resource):
                 result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
             except MediaServerError:
                 continue
-            except AuthServerError:
-                continue
             results.append(result)
         return make_response(dict(data=results), HTTPStatus.OK)
 
@@ -129,10 +123,11 @@ class VideosList(Resource):
     def post(self):
         if g.session_admin:
             return response_error(HTTPStatus.FORBIDDEN, "Admin users can't post videos")
+        schema_video = VideoSchema()
         schema_media = MediaSchema()
         try:
             request_json = request.get_json(force=True)
-            video = VideoSchema().load(request_json)
+            video = schema_video.load(request_json)
             media = schema_media.load(request_json.get("media", {}))
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
@@ -149,10 +144,6 @@ class VideosList(Resource):
                              (media["name"], resp_media.text))
             video.delete()
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error saving media")
-        try:
-            result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
-        except MediaServerError as e:
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
-        except AuthServerError as e:
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+        result = schema_video.dump(video)
+        result["media"] = resp_media.json()
         return make_response(result, HTTPStatus.CREATED)

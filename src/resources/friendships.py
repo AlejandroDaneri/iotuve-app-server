@@ -10,6 +10,7 @@ from src.schemas.friendship import FriendshipSchema, FriendshipPaginatedSchema
 from src.models.friendship import Friendship
 from src.clients.auth_api import AuthAPIClient
 from src.services.fcm import FCMService
+from src.services.user import UserService, AuthServerError
 
 
 class Friendships(Resource):
@@ -41,7 +42,14 @@ class Friendships(Resource):
             if status == "approved":
                 FCMService.send_friendship_approved(friendship.from_user, friendship.to_user, silent=True)
 
-        return make_response(FriendshipSchema().dump(friendship), HTTPStatus.OK)
+        data = FriendshipSchema().dump(friendship)
+        try:
+            data["from_user"] = UserService.get_marshalled_user(data["from_user"])
+            data["to_user"] = UserService.get_marshalled_user(data["to_user"])
+        except AuthServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
+        return make_response(data, HTTPStatus.OK)
 
     @check_token
     def delete(self, friendship_id):
@@ -66,7 +74,16 @@ class FriendshipsList(Resource):
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
         friendships = Friendship.get_friendships(paginated["filters"], paginated["offset"], paginated["limit"])
-        return make_response(dict(data=FriendshipSchema().dump(friendships, many=True)), HTTPStatus.OK)
+        result = []
+        for friendship in friendships:
+            data = FriendshipSchema().dump(friendship)
+            try:
+                data["from_user"] = UserService.get_marshalled_user(data["from_user"])
+                data["to_user"] = UserService.get_marshalled_user(data["to_user"])
+            except AuthServerError as e:
+                return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+            result.append(data)
+        return make_response(dict(data=result), HTTPStatus.OK)
 
     @check_token
     def post(self):
@@ -95,9 +112,16 @@ class FriendshipsList(Resource):
         friendship.date_updated = now
         friendship.save()
 
+        data = FriendshipSchema().dump(friendship)
+        try:
+            data["from_user"] = UserService.get_marshalled_user(data["from_user"])
+            data["to_user"] = UserService.get_marshalled_user(data["to_user"])
+        except AuthServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
         FCMService.send_friendship_requested(friendship.from_user, friendship.to_user, silent=True)
 
-        return make_response(schema.dump(friendship), HTTPStatus.CREATED)
+        return make_response(data, HTTPStatus.CREATED)
 
 
 class FriendsByUser(Resource):
@@ -110,11 +134,17 @@ class FriendsByUser(Resource):
             if friendship.from_user == username:
                 res = FriendshipSchema(exclude=("from_user",)).dump(friendship)
                 res["friendship_id"] = res.pop("id")
-                res["username"] = res.pop("to_user")
+                try:
+                    res["user"] = UserService.get_marshalled_user(res.pop("to_user"))
+                except AuthServerError as e:
+                    return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
                 result.append(res)
             elif friendship.to_user == username:
                 res = FriendshipSchema(exclude=("to_user",)).dump(friendship)
                 res["friendship_id"] = res.pop("id")
-                res["username"] = res.pop("from_user")
+                try:
+                    res["user"] = UserService.get_marshalled_user(res.pop("from_user"))
+                except AuthServerError as e:
+                    return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
                 result.append(res)
         return make_response(dict(friends=result), HTTPStatus.OK)

@@ -1,8 +1,15 @@
 from http import HTTPStatus
 from flask import current_app as app
+from src.clients.auth_api import AuthAPIClient
 from src.clients.media_api import MediaAPIClient
 from src.models.friendship import Friendship
 from src.models.video import Video
+
+
+class AuthServerError(Exception):
+    """
+    """
+    pass
 
 
 class UserService:
@@ -31,3 +38,14 @@ class UserService:
     def marshal_user(username, data):
         data['avatar'] = UserService.__marshal_avatar(username) or data['avatar']
         data['statistics'] = UserService.__marshal_statistics(username)
+        return data
+
+    @staticmethod
+    def get_marshalled_user(username):
+        resp_auth = AuthAPIClient.get_user(username)
+        data = resp_auth.json()
+        if resp_auth.status_code != HTTPStatus.OK:
+            app.logger.error("[username:%s] Get user - Error from auth-server: %s" %
+                             (username, resp_auth.text))
+            raise AuthServerError("Error getting video user data")
+        return UserService.marshal_user(username, data)
