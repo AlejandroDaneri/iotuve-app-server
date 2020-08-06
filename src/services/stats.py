@@ -3,6 +3,7 @@ from src.models.comment import Comment
 from src.models.friendship import Friendship
 from src.models.stat import Stat
 from src.models.video import Video
+from src.models.reaction import Like, Dislike, View
 
 
 class StatisticsService:
@@ -19,7 +20,7 @@ class StatisticsService:
                     '$dateToString': {
                         'date': '$timestamp',
                         'format': '%Y-%m-%d %H:%M'
-            }}}},
+                    }}}},
             {"$group": {
                 "_id": '$datetime',
                 "count": {
@@ -76,3 +77,85 @@ class StatisticsService:
     @staticmethod
     def count_friendships(date_from, date_to):
         return Friendship.objects(date_created__gte=date_from, date_created__lte=date_to).count()
+
+    @staticmethod
+    def top_likes():
+        return Video.objects().order_by('-count_likes').limit(10).fields(title=1, count_likes=1)
+
+    @staticmethod
+    def top_dislikes():
+        return Video.objects().order_by('-count_dislikes').limit(10).fields(title=1, count_dislikes=1)
+
+    @staticmethod
+    def top_most_viewed_videos():
+        return Video.objects().order_by('-count_views').limit(10).fields(title=1, count_views=1)
+
+    @staticmethod
+    def count_approved_friendships():
+        return Friendship.objects(status__exact="approved").count()
+
+    @staticmethod
+    def count_pending_friendships():
+        return Friendship.objects(status__exact="pending").count()
+
+    @staticmethod
+    def top_active_users():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        return [doc for doc in View.objects().aggregate(pipeline)]
+
+
+    @staticmethod
+    def min_max_avg_comments():
+        pipeline = [
+            {"$project": {
+                "user": 1,
+                "content": 1,
+                "content_len": {"$strLenCP": "$content"}
+            }},
+            {"$group": {
+                "_id": "null",  # TODO: revisar si es con null
+                "max": {"$max": "$content_len"},
+                "min": {"$min": "$content_len"},
+                "avg": {"$avg": "$content_len"}
+            }}
+
+        ]
+        return [doc for doc in Comment.objects().aggregate(pipeline)]
+
+    @staticmethod
+    def top_writer_users():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        return [doc for doc in Comment.objects().aggregate(pipeline)]
+
+    @staticmethod
+    def count_visibility():
+        pipeline = [
+            {"$group": {"_id": "$visibility", "count": {"$sum": 1}}},
+        ]
+        return [doc for doc in Video.objects().aggregate(pipeline)]
+
+    @staticmethod
+    def top_liker():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        return [doc for doc in Like.objects().aggregate(pipeline)]
+
+    @staticmethod
+    def top_disliker():
+        pipeline = [
+            {"$group": {"_id": "$user", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        return [doc for doc in Dislike.objects().aggregate(pipeline)]

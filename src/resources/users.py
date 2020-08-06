@@ -7,15 +7,7 @@ from src.clients.media_api import MediaAPIClient
 from src.misc.authorization import check_token
 from src.misc.responses import response_error
 from src.schemas.avatar import AvatarSchema
-
-
-def marshal_user(username, data):
-    resp_media = MediaAPIClient.get_picture(username)
-    if resp_media.status_code == HTTPStatus.OK:
-        data['avatar'] = resp_media.json()
-    else:
-        app.logger.error("[avatar:%s] Error getting avatar from media-server: %s" %
-                         (username, resp_media.text))
+from src.services.user import UserService
 
 
 class Users(Resource):
@@ -25,7 +17,7 @@ class Users(Resource):
         resp_auth = AuthAPIClient.get_user(username)
         data = resp_auth.json()
         if resp_auth.status_code == HTTPStatus.OK:
-            marshal_user(username, data)
+            UserService.marshal_user(username, data)
         else:
             app.logger.error("[username:%s] Get user - Error from auth-server: %s" %
                              (username, resp_auth.text))
@@ -36,7 +28,7 @@ class Users(Resource):
         resp_auth = AuthAPIClient.put_user(username, request.get_json(force=True))
         data = resp_auth.json()
         if resp_auth.status_code == HTTPStatus.OK:
-            marshal_user(username, data)
+            UserService.marshal_user(username, data)
         else:
             app.logger.error("[username:%s] Put user - Error from auth-server: %s" %
                              (username, resp_auth.text))
@@ -44,14 +36,8 @@ class Users(Resource):
 
     @check_token
     def patch(self, username):
-        resp_auth = AuthAPIClient.patch_user(username, request.get_json(force=True))
-        data = resp_auth.json()
-        if resp_auth.status_code == HTTPStatus.OK:
-            marshal_user(username, data)
-        else:
-            app.logger.error("[username:%s] Patch user - Error from auth-server: %s" %
-                             (username, resp_auth.text))
-        return data, resp_auth.status_code
+        response = AuthAPIClient.patch_user(username, request.get_json(force=True))
+        return response.json(), response.status_code
 
     @check_token
     def delete(self, username):
@@ -78,7 +64,7 @@ class UsersList(Resource):
         response = AuthAPIClient.get_users(request.data)
         users = response.json()
         for user in users:
-            marshal_user(user['username'], user)
+            UserService.marshal_user(user['username'], user)
         return users, response.status_code
 
 

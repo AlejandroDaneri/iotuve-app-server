@@ -7,22 +7,28 @@ from flask_cors import cross_origin
 def create_app():
     app = Flask(__name__)
 
-    api = Api(app)
+    with app.app_context():
 
-    from src.misc.requests import request_id, is_admin
-    from src.conf.database import init_db
-    from src.conf.routes import init_routes
+        api = Api(app)
 
-    init_db(app)
-    init_routes(api)
+        from src.misc.requests import request_id, is_admin, user_agent
+        from src.conf.database import init_db
+        from src.conf.jobs import init_jobs
+        from src.conf.routes import init_routes
+
+        init_db(app)
+        init_jobs(app)
+        init_routes(api)
 
     @app.before_request
     def before_request():
         g.start = time.time()
         g.request_id = None  # value initialized on request_id()
+        g.user_agent = None  # value initialized on user_agent()
         g.session_token = None  # values initialized on check_token()
         g.session_admin = None  # values initialized on is_admin()
         request_id()
+        user_agent()
         is_admin()
 
     @app.after_request

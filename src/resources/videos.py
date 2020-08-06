@@ -8,9 +8,10 @@ from src.clients.media_api import MediaAPIClient
 from src.misc.authorization import check_token
 from src.misc.responses import response_error, response_ok
 from src.models.comment import Comment
-from src.models.reaction import Like, Dislike, View
+from src.models.friendship import Friendship
 from src.models.video import Video
 from src.schemas.video import VideoSchema, VideoPaginatedSchema, MediaSchema
+from src.services.video import VideoService, MediaServerError
 
 
 class Videos(Resource):
@@ -22,17 +23,16 @@ class Videos(Resource):
             return response_error(HTTPStatus.BAD_REQUEST, str(err))
         if video is None:
             return response_error(HTTPStatus.NOT_FOUND, "Video not found")
-        resp_media = MediaAPIClient.get_video(video.id)
-        if resp_media.status_code != HTTPStatus.OK:
-            app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                             (video.id, resp_media.text))
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
-        schema = VideoSchema()
-        result = schema.dump(video)
-        result["media"] = resp_media.json()
-        result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
-        result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
-        result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
+
+        if not g.session_admin and video.user != g.session_username and video.visibility == "private"\
+                and Friendship.friendship_exist(video.user, g.session_username, "approved") == 0:
+            return response_error(HTTPStatus.FORBIDDEN, "This video is private")
+
+        try:
+            result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+        except MediaServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
         return make_response(result, HTTPStatus.OK)
 
     @check_token
@@ -52,22 +52,19 @@ class Videos(Resource):
             new_video = schema.load(request.get_json(force=True))
         except MarshmallowValidationError as err:
             return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
+
         video.title = new_video.title
         video.description = new_video.description
         video.location = new_video.location
         video.visibility = new_video.visibility
         video.date_updated = datetime.datetime.utcnow()
         video.save()
-        resp_media = MediaAPIClient.get_video(video.id)
-        if resp_media.status_code != HTTPStatus.OK:
-            app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                             (video.id, resp_media.text))
-            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error getting media")
-        result = schema.dump(video)
-        result["media"] = resp_media.json()
-        result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
-        result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
-        result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
+
+        try:
+            result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+        except MediaServerError as e:
+            return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
         return make_response(result, HTTPStatus.OK)
 
     @check_token
@@ -93,21 +90,32 @@ class Videos(Resource):
 class VideosList(Resource):
     @check_token
     def get(self):
-        schema = VideoPaginatedSchema()
-        paginated = schema.load(request.args)
-        videos = Video.objects(**paginated["filters"]).skip(paginated["offset"]).limit(paginated["limit"])
+        try:
+            paginated = VideoPaginatedSchema().load(request.args)
+        except MarshmallowValidationError as err:
+            return response_error(HTTPStatus.BAD_REQUEST, str(err.normalized_messages()))
+
+        filters = paginated["filters"]
+        offset = paginated["offset"]
+        limit = paginated["limit"]
+        user = filters.get("user", None)
+
+        if not g.session_admin and user != g.session_username:
+            video_id = filters.get("id", None)
+            visibility = filters.get("visibility", None)
+            friends = Friendship.get_user_friends_list(g.session_username)
+            videos = Video.get_videos_wall(
+                wall_user=g.session_username, friends_wall_user=friends, video_id=video_id,
+                user=user, visibility=visibility, offset=offset, limit=limit)
+        else:
+            videos = Video.get_videos(filters=filters, offset=offset, limit=limit)
+
         results = []
         for video in videos:
-            resp_media = MediaAPIClient.get_video(video.id)
-            if resp_media.status_code != HTTPStatus.OK:
-                app.logger.error("[video_id:%s] Error getting media from media-server: %s" %
-                                 (video.id, resp_media.text))
+            try:
+                result = VideoService.marshal_video(video.id, VideoSchema().dump(video))
+            except MediaServerError:
                 continue
-            result = VideoSchema().dump(video)
-            result["media"] = resp_media.json()
-            result["user_like"] = Like.objects(video=video, user=g.session_username).first() is not None
-            result["user_dislike"] = Dislike.objects(video=video, user=g.session_username).first() is not None
-            result["user_view"] = View.objects(video=video, user=g.session_username).first() is not None
             results.append(result)
         return make_response(dict(data=results), HTTPStatus.OK)
 
@@ -127,15 +135,15 @@ class VideosList(Resource):
         video.user = g.session_username
         video.date_created = now
         video.date_updated = now
-        new_video = video.save()
-        media["video_id"] = new_video.id
-        media["user_id"] = new_video.user
+        video.save()
+        media["video_id"] = video.id
+        media["user_id"] = video.user
         resp_media = MediaAPIClient.post_video(schema_media.dump(media))
         if resp_media.status_code != HTTPStatus.CREATED:
             app.logger.error("[video_name:%s] Error saving new video on media-server: %s" %
                              (media["name"], resp_media.text))
             video.delete()
             return response_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Error saving media")
-        result = schema_video.dump(new_video)
+        result = schema_video.dump(video)
         result["media"] = resp_media.json()
         return make_response(result, HTTPStatus.CREATED)

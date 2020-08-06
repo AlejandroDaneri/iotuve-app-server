@@ -33,9 +33,26 @@ class VideosTestCase(unittest.TestCase):
         res = self.app.delete('/api/v1/videos/1234')
         self.assertEqual(HTTPStatus.UNAUTHORIZED, res.status_code)
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.media_api.MediaAPIClient.post_video')
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_post_new_valid_video_should_return_ok(self, mock_session, mock_media):
+    def test_post_new_valid_video_should_return_ok(self, mock_session, mock_user, mock_media_get, mock_media_post, mock_picture):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
+        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
+        mock_media_post.return_value.json.return_value = dict(name="mediafile", video_id="1234", date_created="2020-05-01",
+                                                         url=url, thumb=url, size=3215421, type="video/mp4")
+        mock_media_post.return_value.status_code = HTTPStatus.CREATED
+        mock_media_get.return_value.json.return_value = dict(name="mediafile", video_id="1234", date_created="2020-05-01",
+                                                         url=url, thumb=url, size=3215421, type="video/mp4")
+        mock_media_get.return_value.status_code = HTTPStatus.OK
+
         post_json = {
             'title': 'Un titulo',
             'description': 'Una descripcion',
@@ -51,14 +68,6 @@ class VideosTestCase(unittest.TestCase):
                 'longitude': 1212121.232323
             }
         }
-        mock_session.return_value.json.return_value = dict(username="testuser")
-        mock_session.return_value.status_code = HTTPStatus.OK
-
-        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
-        mock_media.return_value.json.return_value = dict(name="mediafile", video_id="1234", date_created="2020-05-01",
-                                                         url=url, thumb=url, size=3215421, type="video/mp4")
-        mock_media.return_value.status_code = HTTPStatus.CREATED
-
         resp = self.app.post('/api/v1/videos', headers={'X-Auth-Token': '123456'}, json=post_json)
         self.assertEqual(HTTPStatus.CREATED, resp.status_code)
         self.assertEqual(url, resp.json["media"]["url"])
@@ -140,12 +149,24 @@ class VideosTestCase(unittest.TestCase):
         resp = self.app.post('/api/v1/videos', headers={'X-Auth-Token': '123456'}, json=post_json)
         self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_put_valid_video_should_return_ok(self, mock_session, mock_media):
+    def test_put_valid_video_should_return_ok(self, mock_session, mock_user, mock_media, mock_picture):
+        video = utils.save_new_video()
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
-        video = utils.save_new_video()
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
+        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
+        mock_media.return_value.json.return_value = dict(name="mediafile", video_id=str(video.id),
+                                                         date_created='2020-05-30T02:36:53.074000',
+                                                         url=url, thumb=url, size=3215421, type="video/mp4")
+        mock_media.return_value.status_code = HTTPStatus.OK
+
         put_json = {
             'title': 'Otro titulo',
             'description': 'Otra descripcion',
@@ -161,12 +182,6 @@ class VideosTestCase(unittest.TestCase):
                 'longitude': 1212121.232323
             }
         }
-
-        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
-        mock_media.return_value.json.return_value = dict(name="mediafile", video_id=str(video.id),
-                                                         date_created='2020-05-30T02:36:53.074000',
-                                                         url=url, thumb=url, size=3215421, type="video/mp4")
-        mock_media.return_value.status_code = HTTPStatus.OK
 
         resp = self.app.put('/api/v1/videos/{}'.format(video.id), headers={'X-Auth-Token': '123456'}, json=put_json)
         self.assertEqual(HTTPStatus.OK, resp.status_code)
@@ -204,7 +219,7 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_put_invalid_video_should_return_ok(self, mock_session, mock_media):
+    def test_put_invalid_video_should_return_bad_request(self, mock_session, mock_media):
         mock_media.side_effect = Exception("should not call media api")
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -267,14 +282,43 @@ class VideosTestCase(unittest.TestCase):
                             headers={'X-Auth-Token': '123456', 'X-Admin': 'true'}, json=put_json)
         self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_get_video_should_return_ok(self, mock_session, mock_media):
+    def test_get_own_private_video_should_return_ok(self, mock_session, mock_user, mock_media, mock_picture):
+        video = utils.save_new_video(visibility="private")
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
+        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
+        mock_media.return_value.json.return_value = dict(name="testmedia", video_id=str(video.id),
+                                                         date_created=video.date_created, url=url, thumb=url,
+                                                         size=3215421, type="video/mp4")
+        mock_media.return_value.status_code = HTTPStatus.OK
 
-        video = utils.save_new_video()
+        resp = self.app.get('/api/v1/videos/{}'.format(video.id), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.OK, resp.status_code)
+        self.assertEqual(str(video.id), resp.json["id"])
+        self.assertEqual(url, resp.json["media"]["url"])
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_friend_private_video_should_return_ok(self, mock_session, mock_user, mock_media, mock_picture):
+        video = utils.save_new_video(user="otheruser", visibility="private")
+        utils.save_new_friendship(from_user="testuser", to_user="otheruser", status="approved")
+
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
         mock_media.return_value.json.return_value = dict(name="testmedia", video_id=str(video.id),
                                                          date_created=video.date_created, url=url, thumb=url,
@@ -288,6 +332,23 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_not_friend_private_video_should_return_forbidden(self, mock_session, mock_media):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+
+        video = utils.save_new_video(user="otheruser", visibility="private")
+
+        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
+        mock_media.return_value.json.return_value = dict(name="testmedia", video_id=str(video.id),
+                                                         date_created=video.date_created, url=url, thumb=url,
+                                                         size=3215421, type="video/mp4")
+        mock_media.return_value.status_code = HTTPStatus.OK
+
+        resp = self.app.get('/api/v1/videos/{}'.format(video.id), headers={'X-Auth-Token': '123456'})
+        self.assertEqual(HTTPStatus.FORBIDDEN, resp.status_code)
+
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_get_video_with_invalid_id_should_return_bad_request(self, mock_session, mock_media):
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
@@ -296,7 +357,6 @@ class VideosTestCase(unittest.TestCase):
 
         resp = self.app.get('/api/v1/videos/{}'.format(1), headers={'X-Auth-Token': '123456'})
         self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
-
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
@@ -365,19 +425,28 @@ class VideosTestCase(unittest.TestCase):
         self.assertEqual("Video deleted", resp.json["message"])
         self.assertIsNone(utils.get_video(video.id))
 
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
     @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
-    def test_get_videos_paginated(self, mock_session, mock_media):
+    def test_get_videos_paginated(self, mock_session, mock_user, mock_media, mock_picture):
         for _ in range(0, 25):
             utils.save_new_video()
+
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
         url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
         mock_media.return_value.json.return_value = dict(name="testmedia", video_id="123456",
                                                          date_created='2020-05-30T02:36:53.074000',
                                                          url=url, thumb=url, size=3215421, type="video/mp4")
         mock_media.return_value.status_code = HTTPStatus.OK
-        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=0, limit=10))
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'},
+                            query_string=dict(offset=0, limit=10, user='testuser'))
         self.assertEqual(HTTPStatus.OK, resp.status_code)
         self.assertEqual(10, len(resp.json["data"]))
 
@@ -393,9 +462,23 @@ class VideosTestCase(unittest.TestCase):
 
     @patch('src.clients.media_api.MediaAPIClient.get_video')
     @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_videos_paginated_wrong_limit_or_offset_should_return_bad_request(self, mock_session, mock_media):
+        mock_session.return_value.json.return_value = dict(username="testuser")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_media.side_effect = Exception("should not call media api")
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=0, limit=5))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'limit': ['Must be one of: 10, 20, 30, 40, 50.']}", resp.json["message"])
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=-2, limit=10))
+        self.assertEqual(HTTPStatus.BAD_REQUEST, resp.status_code)
+        self.assertEqual("{'offset': ['Must be greater than or equal to 0.']}", resp.json["message"])
+
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
     def test_media_server_error_on_get_videos_should_not_return_server_error(self, mock_session, mock_media):
-        for _ in range(1, 25):
-            utils.save_new_video()
+        utils.save_new_video()
         mock_session.return_value.json.return_value = dict(username="testuser")
         mock_session.return_value.status_code = HTTPStatus.OK
         mock_media.return_value.json.return_value = dict(code=-1, message="ups!")
@@ -403,3 +486,44 @@ class VideosTestCase(unittest.TestCase):
         resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'}, query_string=dict(offset=0, limit=10))
         self.assertEqual(HTTPStatus.OK, resp.status_code)
         self.assertEqual(0, len(resp.json["data"]))
+
+    @patch('src.clients.media_api.MediaAPIClient.get_picture')
+    @patch('src.clients.media_api.MediaAPIClient.get_video')
+    @patch('src.clients.auth_api.AuthAPIClient.get_user')
+    @patch('src.clients.auth_api.AuthAPIClient.get_session')
+    def test_get_videos_wall(self, mock_session, mock_user, mock_media, mock_picture):
+        user1 = "testuser1"
+        user2 = "testuser2"
+        user3 = "testuser3"
+        user4 = "testuser4"
+        video1 = utils.save_new_video(user=user1, visibility="private")
+        video2 = utils.save_new_video(user=user2, visibility="private")
+        video3 = utils.save_new_video(user=user2, visibility="private")
+        video4 = utils.save_new_video(user=user3, visibility="private")
+        video5 = utils.save_new_video(user=user4, visibility="public")   # not friend but public
+        video6 = utils.save_new_video(user=user4, visibility="private")  # not friend and private
+
+        utils.save_new_friendship(from_user=user1, to_user=user2, status="approved")
+        utils.save_new_friendship(from_user=user3, to_user=user1, status="approved")
+
+        expected_videos = [str(video1.id), str(video2.id), str(video3.id), str(video4.id), str(video5.id)]
+
+        mock_session.return_value.json.return_value = dict(username="testuser1")
+        mock_session.return_value.status_code = HTTPStatus.OK
+        mock_user.return_value.json.return_value = dict(username="testuser")
+        mock_user.return_value.status_code = HTTPStatus.OK
+        mock_picture.return_value.json.return_value = dict(username="testuser")
+        mock_picture.return_value.status_code = HTTPStatus.OK
+        url = "https://storage.googleapis.com/chotuve-grupo8.appspot.com/uploads/videos/.."
+        mock_media.return_value.json.return_value = dict(name="testmedia", video_id="123456",
+                                                         date_created='2020-05-30T02:36:53.074000',
+                                                         url=url, thumb=url, size=3215421, type="video/mp4")
+        mock_media.return_value.status_code = HTTPStatus.OK
+
+        resp = self.app.get('/api/v1/videos', headers={'X-Auth-Token': '123456'},
+                            query_string=dict(offset=0, limit=10))
+        self.assertEqual(HTTPStatus.OK, resp.status_code)
+        self.assertEqual(len(expected_videos), len(resp.json["data"]))
+
+        for video in resp.json["data"]:
+            self.assertTrue(video["id"] in expected_videos)

@@ -4,6 +4,11 @@ from flask import g, has_request_context
 from flask import request
 
 
+# Pass header User-Agent
+def user_agent():
+    g.user_agent = request.headers.get('User-Agent', '*')
+
+
 # Check header X-Admin
 def is_admin():
     g.session_admin = request.headers.get("X-Admin", "").lower() == "true"

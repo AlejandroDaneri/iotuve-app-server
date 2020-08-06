@@ -8,7 +8,8 @@ class AuthAPIClient:
     @staticmethod
     def __headers():
         headers = {'X-Client-ID': conf.API_AUTH_CLIENT_ID,
-                   'X-Request-ID': g.request_id}
+                   'X-Request-ID': g.request_id,
+                   'User-Agent': g.user_agent}
         if g.session_token:
             headers['X-Auth-Token'] = g.session_token
         if g.session_admin:
