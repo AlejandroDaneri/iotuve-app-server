@@ -23,7 +23,7 @@ MONGO_PORT = os.environ.get('MONGODB_PORT', '27017')
 MONGO_USERNAME = os.environ.get('MONGODB_USERNAME', 'appserveruser')
 MONGO_PASSWORD = os.environ.get('MONGODB_PASSWORD', '123456')
 
-MONGO_URI = 'mongodb://' + MONGO_USERNAME + ':' + MONGO_PASSWORD + '@' + MONGO_HOST + ':' + MONGO_PORT + '/' + MONGO_DB + '?retryWrites=false'
+MONGO_URI = 'mongodb+srv://' + MONGO_USERNAME + ':' + MONGO_PASSWORD + '@' + MONGO_HOST + '/' + MONGO_DB + '?retryWrites=false'
 
 MONGODB_SETTINGS = {
     'host': MONGO_URI
