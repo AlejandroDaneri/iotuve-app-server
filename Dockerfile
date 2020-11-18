@@ -1,4 +1,4 @@
-FROM nethacker/ubuntu-18-04-python-3:python-3.7.3
+FROM python:3.7-alpine
 COPY requirements.txt /root/
 RUN pip3 install -r /root/requirements.txt && useradd -m ubuntu && mkdir /home/ubuntu/logs
 RUN pip3 install git+https://github.com/mongomock/mongomock.git@26058e8c4c93bc014c6b05078deb797baaf7b725
