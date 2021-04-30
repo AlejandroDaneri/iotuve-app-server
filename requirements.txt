@@ -37,7 +37,7 @@ pymongo==3.10.1
 pytz==2020.1
 PyYAML==5.3.1
 requests==2.23.0
-rsa==4.6
+rsa==4.7
 sentinels==1.0.0
 six==1.14.0
 toml==0.10.0
